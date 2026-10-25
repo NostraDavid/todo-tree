@@ -8,3 +8,6 @@ dist
 !.vscode/launch.json
 
 *.vsix
+.direnv/
+result
+result-*

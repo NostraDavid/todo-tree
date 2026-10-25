@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # 31.11.3
+      - run: nix develop --command just sync
+      - run: nix develop --command just check
+      - run: nix develop --command just package
+      - name: Publish the VSIX and its changelog entry on GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          nix develop --command node scripts/release-notes.mjs "${RELEASE_TAG#v}" > release-notes.md
+          gh release create "$RELEASE_TAG" ./*.vsix --verify-tag --title "$RELEASE_TAG" --notes-file release-notes.md
