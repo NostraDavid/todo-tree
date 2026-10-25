@@ -197,7 +197,7 @@ function activate(context) {
         });
         sortedTags = sortedTags.splice(0, 3);
       } else {
-        sortedTags = config.tags();
+        sortedTags = Array.from(new Set(config.tags().concat(Object.keys(counts))));
       }
       var text = '';
       var showIcons = config.shouldShowIconsInsteadOfTagsInStatusBar();

@@ -6,6 +6,13 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+## [1.0.8] - 2026-10-25
+
+### Fixed
+
+- Show tag-group counts in tag and current-file status labels without duplicating groups that are also tags. Preserve top-three ordering and zero-result labels.
+- Adapt upstream PR [#916](https://github.com/Gruntfuggly/todo-tree/pull/916) by Abrifq.
+
 ## [1.0.7] - 2026-10-25
 
 ### Fixed
