@@ -6,6 +6,14 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-10-25
+
+### Fixed
+
+- Preserve other files when refreshing grouped results in tree, flat and tags-only views. Based on upstream PR #832 by baincd.
+- Removing the first member of a shared tag group no longer deletes results from its other members.
+- Correct the grouping setting names in the README.
+
 ## [1.0.2] - 2026-10-25
 
 ### Fixed

@@ -807,37 +807,15 @@ class TreeNodeProvider {
 
   reset(uri, children) {
     var fullPath = uri.scheme === 'file' ? uri.fsPath : path.join(uri.authority, uri.fsPath);
-
     var root = children === undefined;
-    if (children === undefined) {
-      children = nodes;
-    }
-    children = children.filter(function(child) {
-      var keep = true;
+    children = (root ? nodes : children).filter(function(child) {
       if (child.nodes !== undefined) {
-        this.reset(uri, child.nodes);
+        child.nodes = this.reset(uri, child.nodes);
       }
-      if (child.type === TODO && !child.tag && child.fsPath == fullPath) { // no tag (e.g. markdown)
-        keep = false;
-      } else if (child.type === TODO && child.parent === undefined && child.fsPath == fullPath) { // top level todo node
-        keep = false;
-      } else if (child.fsPath === fullPath || child.isRootTagNode) {
-        if (config.shouldShowTagsOnly()) {
-          if (child.nodes) {
-            child.nodes = child.nodes.filter(function(node) {
-              return isTodoNode(node) && node.fsPath !== fullPath;
-            });
-          }
-        } else {
-          child.nodes = [];
-        }
-      }
-      return keep;
+      return child.type !== TODO || child.fsPath !== fullPath;
     }, this);
-
-    if (root) {
-      nodes = children;
-    }
+    if (root) nodes = children;
+    return children;
   }
 
   remove(callback, uri, children) {
@@ -848,7 +826,7 @@ class TreeNodeProvider {
         if (child.nodes !== undefined) {
           child.nodes = me.remove(callback, uri, child.nodes);
         }
-        var shouldRemove = child.fsPath === fullPath;
+        var shouldRemove = child.fsPath === fullPath && !child.isRootTagNode;
         if (shouldRemove) {
           delete expandedNodes[child.fsPath];
           me._context.workspaceState.update('expandedNodes', expandedNodes);
