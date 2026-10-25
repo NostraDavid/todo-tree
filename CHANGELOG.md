@@ -6,6 +6,13 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-10-25
+
+### Fixed
+
+- Stop modifying the shared RegExp prototype; preserve native match indices for other extensions.
+- Use native indices on editor-search expressions so capture-group highlights retain their ranges.
+
 ## [1.0.1] - 2026-10-25
 
 ### Fixed

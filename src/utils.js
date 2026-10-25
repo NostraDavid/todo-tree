@@ -259,7 +259,7 @@ function getRegexSource() {
 }
 
 function getRegexForEditorSearch(global) {
-  var flags = 'm';
+  var flags = 'dm';
   if (global) {
     flags += 'g';
   }

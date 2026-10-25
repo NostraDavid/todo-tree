@@ -1,5 +1,4 @@
 var vscode = require('vscode');
-require('regexp-match-indices').shim();
 
 var config = require('./config.js');
 var utils = require('./utils.js');
