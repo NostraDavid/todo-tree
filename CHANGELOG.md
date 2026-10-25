@@ -6,6 +6,14 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+## [1.0.10] - 2026-10-25
+
+### Fixed
+
+- Limit automatic Git refresh to one direct process per workspace with a ten-second timeout.
+- Stop pending Git checks when disabling/reconfiguring polling or deactivating the extension, and ignore late callbacks.
+- Handle failed Git lookups and dispose refresh timers during shutdown.
+
 ## [1.0.9] - 2026-10-25
 
 ### Fixed

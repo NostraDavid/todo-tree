@@ -26,6 +26,7 @@ var hideTimeout;
 var autoGitRefreshTimer;
 var periodicRefreshTimer;
 var lastGitHead = {};
+var gitChecks = new Map();
 var openDocuments = {};
 var provider;
 var ignoreMarkdownUpdate = false;
@@ -524,7 +525,19 @@ function activate(context) {
     function checkGitHead() {
       if (vscode.workspace.workspaceFolders) {
         vscode.workspace.workspaceFolders.map(function(folder) {
-          child_process.exec('git rev-parse HEAD', { cwd: folder.uri.fsPath }, (err, stdout) => {
+          var root = folder.uri.fsPath;
+          if (gitChecks.has(root)) return;
+          var child = child_process.execFile('git', ['rev-parse', 'HEAD'], {
+            cwd: root,
+            timeout: 10000,
+            windowsHide: true,
+          }, (err, stdout) => {
+            if (gitChecks.get(root) !== child) return;
+            gitChecks.delete(root);
+            if (err) {
+              debug('Unable to read Git HEAD: ' + err.message);
+              return;
+            }
             var gitHead = stdout.toString();
             if (lastGitHead[folder.uri.fsPath] !== undefined && gitHead != lastGitHead[folder.uri.fsPath]) {
               debug('Rescan triggered by change to git repository');
@@ -532,9 +545,14 @@ function activate(context) {
             }
             lastGitHead[folder.uri.fsPath] = gitHead;
           });
+          gitChecks.set(root, child);
         });
       }
     }
+
+    var pending = Array.from(gitChecks.values());
+    gitChecks.clear();
+    pending.forEach(child => child.kill());
 
     var timerInterval = vscode.workspace.getConfiguration('todo-tree.general').get('automaticGitRefreshInterval');
 
@@ -1698,6 +1716,14 @@ function activate(context) {
 }
 
 function deactivate() {
+  clearInterval(autoGitRefreshTimer);
+  clearInterval(periodicRefreshTimer);
+  clearTimeout(refreshTimeout);
+  clearTimeout(fileRefreshTimeout);
+  clearTimeout(hideTimeout);
+  var pending = Array.from(gitChecks.values());
+  gitChecks.clear();
+  pending.forEach(child => child.kill());
   ripgrep.kill();
   provider.clear([]);
 }
