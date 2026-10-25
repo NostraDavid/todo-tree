@@ -6,6 +6,14 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+## [1.0.6] - 2026-10-25
+
+### Fixed
+
+- Keep default TODO matches on their own line, including HTML comments and CRLF files.
+- Require a literal dot and whitespace in numbered Markdown lists; preserve checkbox tags and explicit multiline patterns.
+- Adapt the default-regex ideas from upstream PRs [#913](https://github.com/Gruntfuggly/todo-tree/pull/913) by quidscio and [#639](https://github.com/Gruntfuggly/todo-tree/pull/639) by baincd.
+
 ## [1.0.5] - 2026-10-25
 
 ### Fixed

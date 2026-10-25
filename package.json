@@ -1,7 +1,7 @@
 {
   "name": "nostradavid-todo-tree",
   "displayName": "Todo Tree by NostraDavid",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Find TODO and FIXME comments with ripgrep. A maintained Todo Tree fork by NostraDavid.",
   "categories": [
     "Other"
@@ -1135,7 +1135,7 @@
         "type": "object",
         "properties": {
           "todo-tree.regex.regex": {
-            "default": "(//|#|<!--|;|/\\*|^|^[ \\t]*(-|\\d+.))\\s*($TAGS)",
+            "default": "(//|#|<!--|;|/\\*|^|^[ \\t]*(-|\\d+\\.)[ \\t])[ \\t]*($TAGS)",
             "markdownDescription": "%todo-tree.configuration.regex.regex.markdownDescription%",
             "type": "string",
             "minLength": 1,
