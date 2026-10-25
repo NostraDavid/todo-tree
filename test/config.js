@@ -20,6 +20,7 @@ QUnit.test('config.ripgrepPath expands tilde and preserves executable lookup', f
   var configModule = { exports: {} };
   vm.runInNewContext(fs.readFileSync(require.resolve('../out/src/config.js'), 'utf8'), {
     module: configModule,
+    exports: configModule.exports,
     process: process,
     require: function(name) {
       return name === 'vscode' ? vscode : requireConfig(name);
@@ -83,6 +84,7 @@ QUnit.test('config.ripgrepPath finds current universal binaries on every support
         var configModule = { exports: {} };
         vm.runInNewContext(fs.readFileSync(require.resolve('../out/src/config.js'), 'utf8'), {
           module: configModule,
+          exports: configModule.exports,
           process: { platform: platform, arch: arch },
           require: function(name) {
             if (name === 'fs') {

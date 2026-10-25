@@ -12,6 +12,7 @@ function load(execFile, overrides = {}) {
   const source = path.join(project, 'out/src/ripgrep.js');
   vm.runInNewContext(fs.readFileSync(source, 'utf8'), {
     module,
+    exports: module.exports,
     process: {
       platform: process.platform,
       arch: process.arch,

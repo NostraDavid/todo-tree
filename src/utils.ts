@@ -1,24 +1,26 @@
-var micromatch = require('micromatch');
-var os = require('os');
-var path = require('path');
-var find = require('find');
-var strftime = require('fast-strftime');
-var commentPatterns = require('comment-patterns');
+import type { LabelData, TagParts } from './types';
+type Configuration = Pick<typeof import('./config'), 'regex' | 'tags' | 'subTagRegex' | 'isRegexCaseSensitive'>;
+import * as strftime from 'fast-strftime';
+import * as find from 'find';
+import * as micromatch from 'micromatch';
+import * as os from 'os';
+import * as path from 'path';
+import commentPatterns = require('comment-patterns');
 
-var colourNames = require('./colourNames.js');
-var themeColourNames = require('./themeColourNames.js');
+import colourNames = require('./colourNames');
+import themeColourNames = require('./themeColourNames');
 
-var config;
+var config: Configuration;
 
 var envRegex = new RegExp('\\$\\{(.*?)\\}', 'g');
 var rgbRegex = new RegExp('^rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)(?:,\\s*(\\d+(?:\\.\\d+)?))?\\)$', 'gi');
 var placeholderRegex = new RegExp('(\\$\\{.*\\})');
 
-function init(configuration) {
+export function init(configuration: Configuration) {
   config = configuration;
 }
 
-function isHexColour(colour) {
+export function isHexColour(colour: unknown) {
   if (typeof colour !== 'string') {
     return false;
   }
@@ -28,20 +30,20 @@ function isHexColour(colour) {
     && (hex.length === 3 || hex.length === 4 || hex.length === 6 || hex.length === 8) && !isNaN(parseInt(hex, 16));
 }
 
-function isRgbColour(colour) {
-  return colour.match && colour.match(rgbRegex) !== null;
+export function isRgbColour(colour: unknown) {
+  return typeof colour === 'string' && colour.match(rgbRegex) !== null;
 }
 
-function isNamedColour(colour) {
+export function isNamedColour(colour: string) {
   return colourNames.indexOf(colour.toLowerCase()) > -1;
 }
 
-function isThemeColour(colour) {
+export function isThemeColour(colour: string) {
   return themeColourNames.indexOf(colour) > -1;
 }
 
-function hexToRgba(hex, opacity) {
-  function toComponent(digits) {
+export function hexToRgba(hex: string | undefined, opacity: number) {
+  function toComponent(digits: string) {
     return (digits.length == 1) ? parseInt(digits + digits, 16) : parseInt(digits, 16);
   }
 
@@ -55,7 +57,7 @@ function hexToRgba(hex, opacity) {
     var b = toComponent(rgb.substring(2 * rgb.length / 3, 3 * rgb.length / 3));
 
     if (hex.length == 4 || hex.length == 8) {
-      opacity = parseInt(toComponent(hex.substring(3 * hex.length / 4, 4 * hex.length / 4)) * 100 / 255);
+      opacity = Math.trunc(toComponent(hex.substring(3 * hex.length / 4, 4 * hex.length / 4)) * 100 / 255);
     }
 
     return 'rgba(' + r + ',' + g + ',' + b + ',' + opacity / 100 + ')';
@@ -64,7 +66,7 @@ function hexToRgba(hex, opacity) {
   return '#0F0';
 }
 
-function removeBlockComments(text, fileName) {
+export function removeBlockComments(text: string, fileName: string) {
   var extension = path.extname(fileName);
 
   if (extension === '.jsonc') {
@@ -87,9 +89,9 @@ function removeBlockComments(text, fileName) {
   }
 
   if (commentPattern && commentPattern.multiLineComment && commentPattern.multiLineComment.length > 0) {
-    commentPattern = commentPatterns.regex(fileName);
-    if (commentPattern && commentPattern.regex) {
-      var regex = commentPattern.regex;
+    var commentRegex = commentPatterns.regex(fileName);
+    if (commentRegex && commentRegex.regex) {
+      var regex = commentRegex.regex;
       if (extension == '.hs') {
         var source = regex.source;
         var flags = regex.flags;
@@ -103,11 +105,11 @@ function removeBlockComments(text, fileName) {
           source = source.replace('\\*\\/', '-}');
         }
         regex = new RegExp(source, flags);
-        commentPattern.regex = regex;
+        commentRegex.regex = regex;
       }
-      var commentMatch = commentPattern.regex.exec(text);
+      var commentMatch = commentRegex.regex.exec(text);
       if (commentMatch) {
-        for (var i = commentPattern.cg.contentStart; i < commentMatch.length; ++i) {
+        for (var i = commentRegex.cg.contentStart; i < commentMatch.length; ++i) {
           if (commentMatch[i]) {
             text = commentMatch[i];
             break;
@@ -120,7 +122,7 @@ function removeBlockComments(text, fileName) {
   return text;
 }
 
-function removeLineComments(text, fileName) {
+export function removeLineComments(text: string, fileName: string) {
   var result = text.trim();
 
   if (path.extname(fileName) === '.jsonc') {
@@ -151,14 +153,13 @@ function getTagRegex() {
     tag = tag.replace(/[|{}()[\]^$+*?.-]/g, '\\$&');
     return tag;
   });
-  tags = tags.join('|');
-  return '(' + tags + ')';
+  return '(' + tags.join('|') + ')';
 }
 
-function extractTag(text, matchOffset) {
+export function extractTag(text: string, matchOffset?: number): TagParts {
   var c = config.regex();
   var flags = c.caseSensitive ? '' : 'i';
-  var tagMatch = null;
+  var tagMatch: RegExpExecArray | null = null;
   var tagOffset;
   var originalTag;
   var before = text;
@@ -186,12 +187,13 @@ function extractTag(text, matchOffset) {
         text = rightOfTag;
         after = rightOfTag;
       }
+      const matchedTag = tagMatch[0];
       c.tags.map(function(tag) {
         if (config.isRegexCaseSensitive()) {
-          if (tag === tagMatch[0]) {
+          if (tag === matchedTag) {
             originalTag = tag;
           }
-        } else if (tag.toLowerCase() === tagMatch[0].toLowerCase()) {
+        } else if (tag.toLowerCase() === matchedTag.toLowerCase()) {
           originalTag = tag;
         }
       });
@@ -201,7 +203,7 @@ function extractTag(text, matchOffset) {
     var regex = new RegExp(c.regex, flags);
     var match = regex.exec(text);
     if (match !== null) {
-      tagMatch = true;
+      tagMatch = match;
       originalTag = match[0];
       before = text.substring(0, text.indexOf(originalTag));
       after = text.substring(before.length + originalTag.length);
@@ -219,10 +221,10 @@ function extractTag(text, matchOffset) {
   };
 }
 
-function updateBeforeAndAfter(result, text, matchOffset) {
+export function updateBeforeAndAfter(result: TagParts, text: string, matchOffset?: number) {
   var c = config.regex();
   var flags = c.caseSensitive ? '' : 'i';
-  var tagMatch = null;
+  var tagMatch: RegExpExecArray | null = null;
 
   var tagRegex = new RegExp(getTagRegex(), flags);
   var subTagRegex = new RegExp(config.subTagRegex(), flags);
@@ -249,7 +251,7 @@ function updateBeforeAndAfter(result, text, matchOffset) {
   return result;
 }
 
-function getRegexSource() {
+export function getRegexSource() {
   var regex = config.regex().regex;
   if (regex.indexOf('($TAGS)') > -1) {
     regex = regex.split('($TAGS)').join(getTagRegex());
@@ -258,7 +260,7 @@ function getRegexSource() {
   return regex;
 }
 
-function getRegexForEditorSearch(global) {
+export function getRegexForEditorSearch(global?: boolean) {
   var flags = 'dm';
   if (global) {
     flags += 'g';
@@ -274,7 +276,7 @@ function getRegexForEditorSearch(global) {
   return RegExp(source, flags);
 }
 
-function getRegexForRipGrep() {
+export function getRegexForRipGrep() {
   var flags = 'gm';
   if (config.regex().caseSensitive === false) {
     flags += 'i';
@@ -283,7 +285,7 @@ function getRegexForRipGrep() {
   return RegExp(getRegexSource(), flags);
 }
 
-function isIncluded(name, includes, excludes) {
+export function isIncluded(name: string, includes: string[], excludes: string[]) {
   var posix_includes = includes.map(function(glob) {
     return glob.replace(/\\/g, '/');
   });
@@ -298,7 +300,7 @@ function isIncluded(name, includes, excludes) {
   return included;
 }
 
-function formatLabel(template, node, unexpectedPlaceholders) {
+export function formatLabel(template: string, node: LabelData, unexpectedPlaceholders?: string[]) {
   var result = template;
 
   var tag = String(node.actualTag).trim();
@@ -306,8 +308,8 @@ function formatLabel(template, node, unexpectedPlaceholders) {
   var filename = node.fsPath ? path.basename(node.fsPath) : '';
   var filepath = node.fsPath ? node.fsPath : '';
 
-  var formatLabelMap = {
-    'line': node.line + 1,
+  var formatLabelMap: Record<string, string | number | undefined> = {
+    'line': node.line! + 1,
     'column': node.column,
     'tag': tag,
     'tag:uppercase': tag.toUpperCase(),
@@ -327,7 +329,7 @@ function formatLabel(template, node, unexpectedPlaceholders) {
   // prepare regex to substitude "${name}" with it's value from map
   var re = new RegExp('\\$\\{(' + Object.keys(formatLabelMap).join('|') + ')\\}', 'gi');
   result = result.replace(re, function(matched) {
-    return formatLabelMap[matched.slice(2, -1).toLowerCase()];
+    return String(formatLabelMap[matched.slice(2, -1).toLowerCase()]);
   });
 
   if (unexpectedPlaceholders) {
@@ -340,7 +342,7 @@ function formatLabel(template, node, unexpectedPlaceholders) {
   return result;
 }
 
-function createFolderGlob(folderPath, rootPath, filter) {
+export function createFolderGlob(folderPath: string, rootPath: string, filter: string) {
   if (process.platform === 'win32') {
     var fp = folderPath.replace(/\\/g, '/');
     var rp = rootPath.replace(/\\/g, '/');
@@ -355,7 +357,7 @@ function createFolderGlob(folderPath, rootPath, filter) {
   return (folderPath + filter).replace(/\/\//g, '/');
 }
 
-function getSubmoduleExcludeGlobs(rootPath) {
+export function getSubmoduleExcludeGlobs(rootPath: string) {
   var submodules = find.fileSync('.git', rootPath);
   submodules = submodules.map(function(submodule) {
     return path.dirname(submodule);
@@ -366,11 +368,14 @@ function getSubmoduleExcludeGlobs(rootPath) {
   return submodules;
 }
 
-function isHidden(filename) {
+export function isHidden(filename: string) {
   return path.basename(filename).indexOf('.') !== -1 && path.extname(filename) === '';
 }
 
-function expandTilde(filePath) {
+export function expandTilde(filePath: string): string;
+export function expandTilde(filePath: undefined): undefined;
+export function expandTilde(filePath: string | undefined): string | undefined;
+export function expandTilde(filePath: string | undefined) {
   if (filePath && filePath[0] === '~') {
     filePath = path.join(os.homedir(), filePath.slice(1));
   }
@@ -378,7 +383,7 @@ function expandTilde(filePath) {
   return filePath;
 }
 
-function replaceEnvironmentVariables(text) {
+export function replaceEnvironmentVariables(text: string) {
   text = text.replace(envRegex, function(match, name) {
     return process.env[name] ? process.env[name] : '';
   });
@@ -386,7 +391,7 @@ function replaceEnvironmentVariables(text) {
   return text;
 }
 
-function formatExportPath(template, dateTime) {
+export function formatExportPath(template: string, dateTime?: Date) {
   var result = expandTilde(template);
   if (result) {
     result = strftime.strftime(result, dateTime);
@@ -394,7 +399,7 @@ function formatExportPath(template, dateTime) {
   return result;
 }
 
-function complementaryColour(colour) {
+export function complementaryColour(colour: string) {
   var hex = colour.split(/ /)[0].replace(/[^\da-fA-F]/g, '');
   var digits = hex.length / 3;
   var red = parseInt(hex.substr(0, digits), 16);
@@ -412,8 +417,8 @@ function complementaryColour(colour) {
   return l > 0.179 ? '#000000' : '#ffffff';
 }
 
-function isValidColour(colour) {
-  if (colour) {
+export function isValidColour(colour: unknown) {
+  if (typeof colour === 'string' && colour) {
     if (isNamedColour(colour) || isThemeColour(colour) || isHexColour(colour) || isRgbColour(colour)) {
       return true;
     }
@@ -422,7 +427,7 @@ function isValidColour(colour) {
   return false;
 }
 
-function setRgbAlpha(rgb, alpha) {
+export function setRgbAlpha(rgb: string, alpha: number) {
   rgbRegex.lastIndex = 0;
   var match = rgbRegex.exec(rgb);
   if (match !== null) {
@@ -431,11 +436,11 @@ function setRgbAlpha(rgb, alpha) {
   return rgb;
 }
 
-function isCodicon(icon) {
+export function isCodicon(icon: string) {
   return icon.trim().indexOf('$(') === 0;
 }
 
-function toGlobArray(globs) {
+export function toGlobArray(globs: string | string[] | undefined) {
   if (globs === undefined) {
     return [];
   }
@@ -444,30 +449,3 @@ function toGlobArray(globs) {
   }
   return globs;
 }
-
-module.exports.init = init;
-module.exports.isHexColour = isHexColour;
-module.exports.isRgbColour = isRgbColour;
-module.exports.isNamedColour = isNamedColour;
-module.exports.isThemeColour = isThemeColour;
-module.exports.hexToRgba = hexToRgba;
-module.exports.removeBlockComments = removeBlockComments;
-module.exports.removeLineComments = removeLineComments;
-module.exports.extractTag = extractTag;
-module.exports.updateBeforeAndAfter = updateBeforeAndAfter;
-module.exports.getRegexSource = getRegexSource;
-module.exports.getRegexForRipGrep = getRegexForRipGrep;
-module.exports.getRegexForEditorSearch = getRegexForEditorSearch;
-module.exports.isIncluded = isIncluded;
-module.exports.formatLabel = formatLabel;
-module.exports.createFolderGlob = createFolderGlob;
-module.exports.getSubmoduleExcludeGlobs = getSubmoduleExcludeGlobs;
-module.exports.isHidden = isHidden;
-module.exports.expandTilde = expandTilde;
-module.exports.replaceEnvironmentVariables = replaceEnvironmentVariables;
-module.exports.formatExportPath = formatExportPath;
-module.exports.complementaryColour = complementaryColour;
-module.exports.isValidColour = isValidColour;
-module.exports.setRgbAlpha = setRgbAlpha;
-module.exports.isCodicon = isCodicon;
-module.exports.toGlobArray = toGlobArray;

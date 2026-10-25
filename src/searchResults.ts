@@ -1,22 +1,23 @@
-var path = require('path');
+import * as path from 'path';
+import type { FileUri, SearchMatch } from './types';
 
-var searchResults = [];
+var searchResults: SearchMatch[] = [];
 
-function clear() {
+export function clear() {
   searchResults = [];
 }
 
-function add(result) {
+export function add(result: SearchMatch) {
   searchResults.push(result);
 }
 
-function remove(uri) {
+export function remove(uri: FileUri) {
   searchResults = searchResults.filter(function(match) {
     return match.uri !== uri;
   });
 }
 
-function addToTree(tree) {
+export function addToTree(tree: { add(result: SearchMatch): unknown }) {
   searchResults.map(function(match) {
     if (match.added !== true) {
       tree.add(match);
@@ -25,31 +26,22 @@ function addToTree(tree) {
   });
 }
 
-function containsMarkdown() {
+export function containsMarkdown() {
   return searchResults.filter(function(match) {
     return path.extname(match.uri.fsPath) === '.md';
   }).length > 0;
 }
 
-function count() {
+export function count() {
   return searchResults.length;
 }
 
-function markAsNotAdded() {
+export function markAsNotAdded() {
   searchResults.forEach(function(match) {
     match.added = false;
   });
 }
 
-function filter(filterFunction) {
+export function filter(filterFunction: (match: SearchMatch) => unknown) {
   searchResults = searchResults.filter(filterFunction);
 }
-
-module.exports.clear = clear;
-module.exports.add = add;
-module.exports.remove = remove;
-module.exports.addToTree = addToTree;
-module.exports.containsMarkdown = containsMarkdown;
-module.exports.count = count;
-module.exports.markAsNotAdded = markAsNotAdded;
-module.exports.filter = filter;

@@ -9,20 +9,26 @@
  */
 
 'use strict';
-const child_process = require('child_process');
-const fs = require('fs');
-const path = require('path');
-const parse = require('shell-quote').parse;
-const utils = require('./utils');
+import * as child_process from 'child_process';
+import type { ChildProcess } from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
+import { parse } from 'shell-quote';
+import type { RipgrepOptions } from './types';
+import * as utils from './utils';
 
-var activeProcesses = new Map();
+var activeProcesses = new Map<ChildProcess, () => void>();
 
-function RipgrepError(error, stderr) {
-  this.message = error;
-  this.stderr = stderr;
+class RipgrepError {
+  message: string;
+  stderr: string;
+  constructor(error: string, stderr: string) {
+    this.message = error;
+    this.stderr = stderr;
+  }
 }
 
-function formatResults(stdout, multiline) {
+function formatResults(stdout: string, multiline?: boolean): Match[] {
   stdout = stdout.trim();
 
   if (!stdout) {
@@ -30,12 +36,12 @@ function formatResults(stdout, multiline) {
   }
 
   if (multiline === true) {
-    var results = [];
+    var results: Match[] = [];
     var regex = utils.getRegexForEditorSearch(true);
     var lines = stdout.split('\n');
 
-    var buffer = [];
-    var matches = [];
+    var buffer: string[] = [];
+    var matches: Match[] = [];
     var text = '';
 
     lines.map(function(line) {
@@ -65,10 +71,10 @@ function formatResults(stdout, multiline) {
     .map((line) => new Match(line));
 }
 
-function parseAdditional(value, cwd) {
+function parseAdditional(value: unknown, cwd: string): string[] {
   if (value === undefined) value = '';
   if (typeof value !== 'string') throw new Error('todo-tree.ripgrep.ripgrepArgs must be a string');
-  var quote;
+  var quote: string | undefined;
   var escaped = false;
   var ansi = false;
   for (var index = 0; index < value.length; ++index) {
@@ -91,20 +97,22 @@ function parseAdditional(value, cwd) {
   var environment = Object.assign(Object.create(null), process.env, { PWD: cwd });
   return parse(value, environment, { splitUnquoted: true }).map(function(argument) {
     if (typeof argument === 'string') return argument;
-    if (argument.op === 'glob') return argument.pattern;
+    if ('op' in argument && argument.op === 'glob') return argument.pattern;
     throw new Error('Shell operators and comments are not supported in todo-tree.ripgrep.ripgrepArgs');
   });
 }
 
-module.exports.search = async function ripGrep(cwd, options) {
+export async function search(cwd: string | undefined, options: RipgrepOptions | undefined): Promise<Match[]> {
   if (!cwd) throw new Error('No cwd provided');
   if (!options) throw new Error('No search options provided');
-  if (!fs.existsSync(options.rgPath)) throw new Error('ripgrep executable not found (' + options.rgPath + ')');
+  const rgPath = options.rgPath;
+  const outputChannel = options.outputChannel;
+  if (!rgPath || !fs.existsSync(rgPath)) throw new Error('ripgrep executable not found (' + rgPath + ')');
   if (!fs.existsSync(cwd)) throw new Error('root folder not found (' + cwd + ')');
-  function debug(text) {
-    if (options.outputChannel) {
+  function debug(text: string) {
+    if (outputChannel) {
       var now = new Date();
-      options.outputChannel.appendLine(
+      outputChannel.appendLine(
         now.toLocaleTimeString('en', { hour12: false }) + '.' + String(now.getMilliseconds()).padStart(3, '0') + ' '
           + text,
       );
@@ -127,11 +135,12 @@ module.exports.search = async function ripGrep(cwd, options) {
       args.push('-g', glob);
     });
     args.push('--', options.filename || '.');
-    debug('Command: ' + JSON.stringify([options.rgPath].concat(args)));
-    var stdout = await new Promise(function(resolve, reject) {
+    debug('Command: ' + JSON.stringify([rgPath].concat(args)));
+    var stdout = await new Promise<string>(function(resolve, reject) {
       var cancelled = false;
-      var child = child_process.execFile(options.rgPath, args, {
+      var child = child_process.execFile(rgPath, args, {
         cwd: cwd,
+        encoding: 'utf8',
         maxBuffer: (options.maxBuffer || 200) * 1024,
         windowsHide: true,
         shell: false,
@@ -154,16 +163,21 @@ module.exports.search = async function ripGrep(cwd, options) {
   } finally {
     if (patternDirectory) fs.rmSync(patternDirectory, { recursive: true, force: true });
   }
-};
+}
 
-module.exports.kill = function() {
+export function kill() {
   activeProcesses.forEach(function(cancel) {
     cancel();
   });
-};
+}
 
-class Match {
-  constructor(matchText) {
+export class Match {
+  declare fsPath: string;
+  declare line: number;
+  declare column: number;
+  declare match: string;
+  declare extraLines?: Match[];
+  constructor(matchText: string) {
     // Detect file, line number and column which is formatted in the
     // following format: {file}:{line}:{column}:{code match}
     var regex = RegExp(/^(?<file>.*):(?<line>\d+):(?<column>\d+):(?<todo>.*)/);
@@ -185,9 +199,9 @@ class Match {
       var parts = matchText.split(':');
       var hasColumn = parts.length === 4;
       this.fsPath += parts.shift();
-      this.line = parseInt(parts.shift());
+      this.line = parseInt(parts.shift() as string);
       if (hasColumn === true) {
-        this.column = parseInt(parts.shift());
+        this.column = parseInt(parts.shift() as string);
       } else {
         this.column = 1;
       }
@@ -195,5 +209,3 @@ class Match {
     }
   }
 }
-
-module.exports.Match = Match;

@@ -4,7 +4,7 @@ The extension keeps its existing settings, commands, publisher identity, and beh
 
 ## Sequence
 
-- [ ] Compile the existing runtime and migrate the four static catalogs.
+- [x] Compile the existing runtime and migrate the four static catalogs.
 - [ ] Type configuration, highlighting attributes, search results, ripgrep, and utilities.
 - [ ] Type tree nodes, icons, highlighting, and editor orchestration.
 - [ ] Convert tests, build configuration, and maintenance scripts to TypeScript.

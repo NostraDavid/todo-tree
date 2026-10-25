@@ -621,3 +621,11 @@ QUnit.test('tag parsing keeps its intermediate values out of process globals', f
   assert.notOk(Object.hasOwn(globalThis, 'rightOfTag'));
   assert.notOk(Object.hasOwn(globalThis, 'match'));
 });
+
+QUnit.test('color checks reject non-string settings', function(assert) {
+  for (const value of [undefined, null, {}, [], false, 0]) {
+    assert.strictEqual(utils.isHexColour(value), false);
+    assert.strictEqual(utils.isRgbColour(value), false);
+    assert.strictEqual(utils.isValidColour(value), false);
+  }
+});

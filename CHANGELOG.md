@@ -6,6 +6,14 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+## [1.0.14] - 2026-10-25
+
+### Changed
+
+- Type configuration, highlight attributes, tag extraction, cached results and ripgrep options end to end.
+- Keep process state and executable/output-channel references explicit across asynchronous searches.
+- Reject non-string color settings at the existing color-check boundary.
+
 ## [1.0.13] - 2026-10-25
 
 ### Changed

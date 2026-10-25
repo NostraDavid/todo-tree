@@ -1,12 +1,40 @@
-var config;
+import type { Highlight } from './types';
+type Configuration = Pick<
+  typeof import('./config'),
+  | 'isRegexCaseSensitive'
+  | 'customHighlight'
+  | 'defaultHighlight'
+  | 'tags'
+  | 'shouldUseColourScheme'
+  | 'foregroundColourScheme'
+  | 'backgroundColourScheme'
+>;
+var config: Configuration;
 
-function init(configuration) {
+export function init(configuration: Configuration) {
   config = configuration;
 }
 
-function getAttribute(tag, attribute, defaultValue, ignoreDefaultHighlight) {
-  function getCustomHighlightSettings(customHighlight, tag) {
-    var result;
+export function getAttribute<K extends keyof Highlight>(
+  tag: string,
+  attribute: K,
+  defaultValue: NonNullable<Highlight[K]>,
+  ignoreDefaultHighlight?: boolean,
+): NonNullable<Highlight[K]>;
+export function getAttribute<K extends keyof Highlight>(
+  tag: string,
+  attribute: K,
+  defaultValue: undefined,
+  ignoreDefaultHighlight?: boolean,
+): Highlight[K];
+export function getAttribute<K extends keyof Highlight>(
+  tag: string,
+  attribute: K,
+  defaultValue: Highlight[K],
+  ignoreDefaultHighlight?: boolean,
+): Highlight[K] {
+  function getCustomHighlightSettings(customHighlight: Record<string, Highlight>, tag: string): Highlight | undefined {
+    var result: Highlight | undefined;
     Object.keys(customHighlight).map(function(t) {
       var flags = '';
       if (config.isRegexCaseSensitive() === false) {
@@ -36,11 +64,11 @@ function getAttribute(tag, attribute, defaultValue, ignoreDefaultHighlight) {
   return defaultValue;
 }
 
-function getIcon(tag) {
+export function getIcon(tag: string) {
   return getAttribute(tag, 'icon', undefined);
 }
 
-function getIconColour(tag) {
+export function getIconColour(tag: string) {
   var useColourScheme = config.shouldUseColourScheme();
 
   var colour = getAttribute(tag, 'iconColor', undefined);
@@ -61,14 +89,14 @@ function getIconColour(tag) {
   return colour;
 }
 
-function getSchemeColour(tag, colours) {
+function getSchemeColour(tag: string, colours: string[]): string | undefined {
   var index = config.tags().indexOf(tag);
   if (colours && colours.length > 0) {
     return colours[index % colours.length];
   }
 }
 
-function getForeground(tag) {
+export function getForeground(tag: string) {
   var useColourScheme = config.shouldUseColourScheme();
   var colour = getAttribute(tag, 'foreground', undefined, useColourScheme);
   if (colour === undefined && useColourScheme) {
@@ -77,7 +105,7 @@ function getForeground(tag) {
   return colour;
 }
 
-function getBackground(tag) {
+export function getBackground(tag: string) {
   var useColourScheme = config.shouldUseColourScheme();
   var colour = getAttribute(tag, 'background', undefined, useColourScheme);
   if (colour === undefined && useColourScheme) {
@@ -85,10 +113,3 @@ function getBackground(tag) {
   }
   return colour;
 }
-
-module.exports.init = init;
-module.exports.getAttribute = getAttribute;
-module.exports.getIcon = getIcon;
-module.exports.getIconColour = getIconColour;
-module.exports.getForeground = getForeground;
-module.exports.getBackground = getBackground;
