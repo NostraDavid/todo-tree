@@ -59,6 +59,9 @@ After the bundle rebuilds, use **Developer: Reload Window** in the Extension Dev
 5. Add a short entry under **Unreleased** in `CHANGELOG.md`.
 
 Use small changes that can be reviewed and released separately.
+The root `.gitignore` is an allowlist: new files inside `src`, `test`, and the other allowed directories are visible automatically.
+For a new root file or directory, add an explicit exception to `.gitignore` first.
+Use `git check-ignore -v PATH` if a file does not appear in `git status`.
 When you take a change from an upstream PR, keep its original authorship and link the PR in the changelog.
 The original MIT license and copyright notice must remain in distributed copies.
 
@@ -75,7 +78,7 @@ An unavailable advisory service makes the audit fail, so retry it when your netw
 Packaging produces `nostradavid-todo-tree-<version>.vsix` without uploading anything.
 The production build uses the committed codicon list and does not fetch a changing file from the internet.
 
-The packaging tool uses `@vscode/vsce` 3.9.2 with npm overrides for `@azure/identity` 4.13.0 and `uuid` 11.1.1.
+The packaging tool uses `@vscode/vsce` 4.0.0 with npm overrides for `@azure/identity` 4.13.0 and `uuid` 11.1.1.
 The Identity pin avoids an MSAL version affected by [GHSA-xcx6-jx8p-x3h5](https://github.com/advisories/GHSA-xcx6-jx8p-x3h5).
 The UUID pin repairs [GHSA-w5hq-g745-h8pq](https://github.com/advisories/GHSA-w5hq-g745-h8pq) while preserving its CommonJS `v4` API.
 These dependencies belong to the development tooling and are not bundled into the extension.

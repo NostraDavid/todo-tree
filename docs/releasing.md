@@ -29,7 +29,7 @@ The move to `1.0.0` establishes this fork's own release history. It does not ren
 `just release-check` rejects a package or lockfile version that does not match the changelog.
 The release workflow also checks that its Git tag matches the package version.
 
-## Create the GitHub release
+## Publish a release
 
 For the first release, run the following commands after its checks pass:
 
@@ -42,24 +42,59 @@ git push origin v1.0.0
 For later releases, substitute their version in the tag and message.
 The tag starts the **Release** GitHub Actions workflow. The workflow checks the project, packages the extension, and attaches the VSIX to a GitHub release.
 Its release notes contain only that version's changelog entry.
+A separate job downloads that exact VSIX, checks its publisher and version, and publishes it to Marketplace. It does not rebuild the extension.
+The job waits up to two minutes for Marketplace to list the version and fails if it cannot verify publication.
 The first push to a fork may require enabling Actions in the repository's **Actions** tab.
 Wait for the **Check** workflow's Linux, macOS, and Windows results before publishing to the Marketplace.
 
-## Publish to Visual Studio Marketplace
+## Connect Marketplace once
 
 The publisher is `nostradavid`. Its extension identifier is `nostradavid.nostradavid-todo-tree`.
-GitHub releases and Marketplace releases are separate publications.
+The workflow needs a repository secret named `VSCE_PAT` before it can publish there.
 
-1. Download the tested VSIX from the GitHub release.
-2. Sign in to [the nostradavid publisher page](https://marketplace.visualstudio.com/manage/publishers/nostradavid).
-3. For the first version, choose **New extension**, then **Visual Studio Code**, and upload the VSIX.
-4. For an existing listing, choose its update action and upload the new VSIX.
-5. Wait for Marketplace validation to finish.
-6. Confirm that the public listing shows the intended publisher and version.
-7. Install that version from the Marketplace in a separate profile and check one TODO search.
+1. Follow Microsoft's [Personal Access Token setup](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#get-a-personal-access-token).
+   Use the Microsoft account that owns this publisher. Create an Azure DevOps organization first if Microsoft requires one.
+2. Select **All accessible organizations** and only the **Marketplace: Manage** scope.
+3. Give the token a short lifetime, at most 30 days. Do not choose an expiry after **2026-12-01**.
+4. Open [the repository's Actions secrets](https://github.com/NostraDavid/todo-tree/settings/secrets/actions).
+5. Create a repository secret named **VSCE_PAT** and paste the token directly into its secret field.
+6. Save the secret. Do not paste the token into chat, source files, terminal commands, or issue reports.
 
-Keep Marketplace credentials out of the repository, terminal output, and issue reports.
-This workflow uses a manual upload, so the GitHub release job does not require a Marketplace token.
-If you later automate Marketplace publication, follow the [current Microsoft publishing guide](https://code.visualstudio.com/api/working-with-extensions/publishing-extension).
+Only the Marketplace publishing steps receive this secret. Tests and package builds do not receive it.
+If the secret is missing, the publishing job stops with a setup error. GitHub release creation can still succeed.
 
+Microsoft's [trusted publishing implementation](https://github.com/microsoft/vscode-vsce#trusted-publishing) can request short-lived credentials from GitHub.
+However, [Microsoft confirms that the Marketplace backend does not yet fully support it](https://github.com/microsoft/vscode-vsce/issues/1275).
+The publisher page currently has no trusted-publishing configuration, so this workflow uses the supported PAT flow.
+Microsoft's publishing guide announces retirement of global Azure DevOps PATs on **2026-12-01**.
+Before that date, configure Marketplace trusted publishing when it becomes available, grant only the publishing job `id-token: write`, replace `VSCE_PAT` with `--oidc`, and remove the stored secret.
+If Microsoft has not enabled trusted publishing, use its [documented Microsoft Entra ID alternative](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#secure-automated-publishing-to-visual-studio-marketplace).
+
+## Publish an existing GitHub release
+
+Use this to publish the already-built **v1.0.0**, or to retry after fixing credentials or a Marketplace outage.
+It does not move the tag or change the GitHub release asset.
+
+1. Open the repository's **Actions** tab.
+2. Select **Release**, then **Run workflow**.
+3. Use the `master` branch and enter the existing release tag, such as `v1.0.0`.
+4. Run the workflow. The GitHub build job is skipped and the Marketplace job downloads the existing release asset.
+5. Confirm that **Verify the published version** passes, then check [the public listing](https://marketplace.visualstudio.com/items?itemName=nostradavid.nostradavid-todo-tree).
+
+The equivalent command is:
+
+```bash
+gh workflow run release.yml --repo NostraDavid/todo-tree --ref master -f tag=v1.0.0
+```
+
+Repeated publication uses `--skip-duplicate`, so it preserves an already-published version.
+Concurrent attempts for the same tag are serialized. A tag-triggered retry also preserves the existing GitHub asset.
+If Marketplace validation or indexing takes longer than two minutes, wait for it to finish and rerun the failed job.
+
+## Check and recover a release
+
+Install the public Marketplace version in a separate VS Code profile and check one TODO search.
 If a published version is broken, fix it and publish the next patch version. Do not move a public tag or reuse a published version number.
+
+If automatic publication is unavailable, download the tested VSIX from the GitHub release and upload it through [publisher management](https://marketplace.visualstudio.com/manage/publishers/nostradavid).
+For the first version, choose **New extension**, then **Visual Studio Code**. For later versions, use the listing's update action.

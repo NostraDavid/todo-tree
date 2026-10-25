@@ -1206,7 +1206,7 @@
     "treeify": "^1.1.0"
   },
   "devDependencies": {
-    "@vscode/vsce": "3.9.2",
+    "@vscode/vsce": "4.0.0",
     "parse-code-context": "1.0.0",
     "qunit": "2.26.0",
     "webpack": "5.112.2",

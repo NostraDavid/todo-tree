@@ -1,0 +1,41 @@
+default_stages: [pre-commit]
+fail_fast: true
+repos:
+  - repo: local
+    hooks:
+      - id: format-check
+        name: Check formatting
+        entry: just format-check
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: lint
+        name: Lint JavaScript, Nix, and workflows
+        entry: just lint
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: test
+        name: Run tests
+        entry: just test
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: build
+        name: Build the extension
+        entry: just build
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: release-check
+        name: Check release metadata
+        entry: just release-check
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: audit
+        name: Audit locked dependencies
+        entry: just audit
+        language: system
+        pass_filenames: false
+        always_run: true

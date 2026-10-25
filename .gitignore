@@ -1,13 +1,44 @@
-test-files
-node_modules
-dist
+# Ignore direct root entries, then allow the project files and directories.
+/*
 
-# https://github.com/github/gitignore/blob/master/Global/VisualStudioCode.gitignore
-.vscode/*
-!.vscode/tasks.json
-!.vscode/launch.json
+# Directories
+!/.github/
+!/.vscode/
+!/docs/
+!/resources/
+!/scripts/
+!/src/
+!/test/
 
-*.vsix
+# Files
+!/.editorconfig
+!/.gitattributes
+!/.gitignore
+!/.node-version
+!/.npmrc
+!/.oxlintrc.json
+!/.pre-commit-config.yaml
+!/.vscodeignore
+!/AGENTS.md
+!/CHANGELOG.md
+!/CONTRIBUTING.md
+!/Justfile
+!/License.txt
+!/README.md
+!/dprint.json
+!/flake.lock
+!/flake.nix
+!/package-lock.json
+!/package.json
+!/package.nls.json
+!/package.nls.zh-cn.json
+!/webpack.config.js
+
+# Keep local editor settings and generated files out of allowed directories.
+/.vscode/*
+!/.vscode/launch.json
+!/.vscode/tasks.json
+node_modules/
+dist/
 .direnv/
-result
-result-*
+*.vsix

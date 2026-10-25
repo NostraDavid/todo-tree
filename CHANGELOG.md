@@ -6,6 +6,17 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+### Added
+
+- Publish the existing GitHub release VSIX to Marketplace automatically, with version checks and a manual retry for existing tags.
+- Verify public Marketplace availability after publication and report missing publishing access explicitly.
+
+### Changed
+
+- Ignore root files by default and allow only the project files and directories, following the nixcfg and CTB convention.
+- Include the repository-local prek configuration so fresh clones can install their commit checks.
+- Upgrade the VSIX tool to 4.0.0 and document the publishing credential setup and required migration before global PAT retirement.
+
 ## [1.0.0] - 2026-10-25
 
 ### Added
