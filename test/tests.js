@@ -1,4 +1,5 @@
 var os = require('os');
+var path = require('path');
 var strftime = require('fast-strftime');
 var utils = require('../src/utils.js');
 var attributes = require('../src/attributes.js');
@@ -502,7 +503,7 @@ QUnit.test('utils.formatExportPath inserts date and time fields', function(asser
 
 QUnit.test('utils.expandTilde replaces tilde with home folder', function(assert) {
   var homeFolder = os.homedir();
-  assert.equal(utils.expandTilde('~/'), homeFolder + '/');
+  assert.equal(utils.expandTilde('~/'), path.join(homeFolder, path.sep));
 });
 
 QUnit.test('utils.formatExportPath expands tilde', function(assert) {
@@ -510,7 +511,7 @@ QUnit.test('utils.formatExportPath expands tilde', function(assert) {
   var expectedDateTime = strftime('%A', new Date(1307472705067));
   assert.equal(
     utils.formatExportPath('~/todo-tree-%A', new Date(1307472705067)),
-    homeFolder + '/todo-tree-' + expectedDateTime,
+    path.join(homeFolder, 'todo-tree-' + expectedDateTime),
   );
 });
 
