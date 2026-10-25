@@ -68,7 +68,7 @@ The GitHub build and release steps remain usable without a Marketplace credentia
 6. Save the secret. Do not paste the token into chat, source files, terminal commands, or issue reports.
 
 Only the Marketplace publishing steps receive this secret. Tests and package builds do not receive it.
-If the secret is missing, the publishing job stops with a setup error. GitHub release creation can still succeed.
+If the secret is missing, the workflow reports a notice and skips Marketplace publication. GitHub release creation remains available. Upload that release's VSIX through the publisher portal.
 
 Microsoft's [trusted publishing implementation](https://github.com/microsoft/vscode-vsce#trusted-publishing) can request short-lived credentials from GitHub.
 However, [Microsoft confirms that the Marketplace backend does not yet fully support it](https://github.com/microsoft/vscode-vsce/issues/1275).

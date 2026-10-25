@@ -13,6 +13,10 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 - Register valid disposables for the tree provider, highlighting and optional debug output.
 - Release editor styles, highlight timers and the tree event emitter without subscription errors on shutdown. Found during the packaged VS Code smoke test.
 
+### Changed
+
+- Skip automatic Marketplace upload with a notice when credentials are absent; keep GitHub release creation available for manual upload.
+
 ## [1.0.11] - 2026-10-25
 
 ### Fixed

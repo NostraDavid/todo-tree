@@ -18,6 +18,22 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  marketplace-access:
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.access.outputs.enabled }}
+    steps:
+      - id: access
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          if [[ -n "$VSCE_PAT" ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Marketplace credentials are not configured. Upload the GitHub VSIX through the publisher portal."
+          fi
+
   release:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -49,8 +65,8 @@ jobs:
           fi
 
   marketplace:
-    needs: release
-    if: ${{ !cancelled() && (needs.release.result == 'success' || github.event_name == 'workflow_dispatch') }}
+    needs: [release, marketplace-access]
+    if: ${{ !cancelled() && needs.marketplace-access.outputs.enabled == 'true' && (needs.release.result == 'success' || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
