@@ -1,15 +1,97 @@
+import type { FileUri, LabelData, SearchMatch } from './types';
+
+export interface WorkspaceRoot {
+  name: string;
+  uri: FileUri;
+}
+interface NodeBase extends LabelData {
+  id: number;
+  label: string;
+  fsPath: string;
+  visible: boolean;
+  hidden?: boolean;
+  tag?: string;
+  subTag?: string;
+  isFolder?: boolean;
+  isWorkspaceNode?: boolean;
+  isRootTagNode?: boolean;
+  isExtraLine?: boolean;
+  pathElement?: string;
+  pathLabel?: string;
+  parent?: PathNode;
+  expanded?: boolean;
+  showCount?: boolean;
+  notExported?: false;
+  isStatusNode?: false;
+}
+export interface PathNode extends NodeBase {
+  type: 'path';
+  nodes: TreeNode[];
+  extraLines?: undefined;
+}
+export interface TodoNode extends NodeBase {
+  type: 'todo';
+  nodes?: undefined;
+  extraLines: TodoNode[];
+  uri: FileUri;
+  tag: string;
+  actualTag: string;
+  line: number;
+  column: number;
+  endColumn: number;
+  before: string;
+  after: string;
+  isFolder?: false;
+  isWorkspaceNode?: false;
+  isRootTagNode?: false;
+}
+export type TreeNode = PathNode | TodoNode;
+export interface StatusNode {
+  isStatusNode: true;
+  notExported: true;
+  label: string;
+  icon: string;
+  tooltip?: string;
+  empty?: boolean;
+  type?: undefined;
+  id?: undefined;
+  fsPath?: undefined;
+  nodes?: undefined;
+  extraLines?: undefined;
+  tag?: undefined;
+  subTag?: undefined;
+  actualTag?: undefined;
+  line?: undefined;
+  column?: undefined;
+  pathLabel?: undefined;
+  parent?: undefined;
+  isRootTagNode?: false;
+  isWorkspaceNode?: false;
+  isFolder?: false;
+}
+export type TreeElement = TreeNode | StatusNode;
+export interface ExportTree {
+  [label: string]: string | ExportTree;
+}
+type TodoTreeItem = vscode.TreeItem & { fsPath?: string; node?: TreeNode };
+type Comparator = (a: TreeNode, b: TreeNode) => number;
+
+function tagIndex(tags: string[], tag: string | undefined): number {
+  return tag === undefined ? -1 : tags.indexOf(tag);
+}
+
 /* jshint esversion:6 */
 
-var vscode = require('vscode');
-var path = require('path');
+import * as path from 'path';
+import * as vscode from 'vscode';
 
-var utils = require('./utils.js');
-var icons = require('./icons.js');
-var config = require('./config.js');
+import * as config from './config.js';
+import * as icons from './icons.js';
+import * as utils from './utils.js';
 
-var workspaceFolders;
-var nodes = [];
-var currentFilter;
+var workspaceFolders: readonly WorkspaceRoot[] | undefined;
+var nodes: TreeNode[] = [];
+var currentFilter: string | undefined;
 
 const PATH = 'path';
 const TODO = 'todo';
@@ -17,50 +99,50 @@ const TODO = 'todo';
 var buildCounter = 1;
 var nodeCounter = 1;
 
-var expandedNodes = {};
+var expandedNodes: Record<string, boolean> = {};
 
 var treeHasSubTags = false;
 
-var isVisible = function(e) {
+var isVisible = function(e: TreeNode) {
   return e.visible === true && e.hidden !== true;
 };
 
-var isTodoNode = function(e) {
+var isTodoNode = function(e: TreeElement): e is TodoNode {
   return e.type === TODO;
 };
 
-var isPathNode = function(e) {
+var isPathNode = function(e: TreeElement): e is PathNode {
   return e.type === PATH;
 };
 
-var findTagNode = function(node) {
+var findTagNode = function(this: string, node: TreeNode): node is PathNode {
   if (config.isRegexCaseSensitive()) {
     return isPathNode(node) && node.tag === this.toString();
   }
-  return isPathNode(node) && node.tag && node.tag.toLowerCase() === this.toString().toLowerCase();
+  return Boolean(isPathNode(node) && node.tag && node.tag.toLowerCase() === this.toString().toLowerCase());
 };
 
-var findSubTagNode = function(node) {
+var findSubTagNode = function(this: string, node: TreeNode): node is PathNode {
   if (config.isRegexCaseSensitive()) {
     return node.type === PATH && node.subTag === this.toString();
   }
-  return node.type === PATH && node.subTag && node.subTag.toLowerCase() === this.toString().toLowerCase();
+  return Boolean(node.type === PATH && node.subTag && node.subTag.toLowerCase() === this.toString().toLowerCase());
 };
 
-var findExactPath = function(node) {
+var findExactPath = function(this: string, node: TreeNode): node is PathNode {
   return isPathNode(node) && node.fsPath === this.toString();
 };
 
-var findPathNode = function(node) {
+var findPathNode = function(this: string, node: TreeNode): node is PathNode {
   return isPathNode(node) && node.pathElement === this.toString();
 };
 
-var findTodoNode = function(node) {
+var findTodoNode = function(this: TodoNode, node: TreeNode): node is TodoNode {
   return isTodoNode(node) && node.label === this.label.toString() && node.fsPath === this.fsPath
     && node.line === this.line;
 };
 
-var sortFoldersFirst = function(a, b, same) {
+var sortFoldersFirst = function(a: TreeNode, b: TreeNode, same: Comparator) {
   if (a.isFolder === b.isFolder) {
     return same(a, b);
   } else {
@@ -68,17 +150,23 @@ var sortFoldersFirst = function(a, b, same) {
   }
 };
 
-var sortByLineAndColumn = function(a, b) {
-  return a.line > b.line ? 1 : b.line > a.line ? -1 : a.column > b.column ? 1 : -1;
+var sortByLineAndColumn = function(a: TreeNode, b: TreeNode) {
+  return Number(a.line) > Number(b.line)
+    ? 1
+    : Number(b.line) > Number(a.line)
+    ? -1
+    : Number(a.column) > Number(b.column)
+    ? 1
+    : -1;
 };
 
-var sortByFilenameAndLine = function(a, b) {
+var sortByFilenameAndLine = function(a: TreeNode, b: TreeNode) {
   return sortFoldersFirst(a, b, function(a, b) {
     if (a.isRootTagNode === true && b.isRootTagNode === true) {
       var tags = config.tags();
-      return tags.indexOf(a.tag) > tags.indexOf(b.tag)
+      return tagIndex(tags, a.tag) > tagIndex(tags, b.tag)
         ? 1
-        : tags.indexOf(b.tag) > tags.indexOf(a.tag)
+        : tagIndex(tags, b.tag) > tagIndex(tags, a.tag)
         ? -1
         : sortByLineAndColumn(a, b);
     }
@@ -86,24 +174,24 @@ var sortByFilenameAndLine = function(a, b) {
   });
 };
 
-var sortTagsOnlyViewByLabel = function(a, b) {
+var sortTagsOnlyViewByLabel = function(a: TreeNode, b: TreeNode) {
   return sortFoldersFirst(a, b, function(a, b) {
     return a.label > b.label ? 1 : b.label > a.label ? -1 : sortByLineAndColumn(a, b);
   });
 };
 
-var sortTagsOnlyViewByTagOrder = function(a, b) {
+var sortTagsOnlyViewByTagOrder = function(a: TreeNode, b: TreeNode) {
   return sortFoldersFirst(a, b, function(a, b) {
     var tags = config.tags();
-    var indexA = tags.indexOf(a.tag);
-    var indexB = tags.indexOf(b.tag);
+    var indexA = tagIndex(tags, a.tag);
+    var indexB = tagIndex(tags, b.tag);
     return indexA > indexB ? 1 : (indexB > indexA ? -1 : sortByFilenameAndLine(a, b));
   });
 };
 
-function createWorkspaceRootNode(folder) {
+function createWorkspaceRootNode(folder: WorkspaceRoot): PathNode {
   var id = (buildCounter * 1000000) + nodeCounter++;
-  var node = {
+  var node: PathNode = {
     isWorkspaceNode: true,
     type: PATH,
     label: folder.uri.scheme === 'file' ? folder.name : folder.uri.authority,
@@ -116,7 +204,7 @@ function createWorkspaceRootNode(folder) {
   return node;
 }
 
-function createPathNode(folder, pathElements, isFolder, subTag) {
+function createPathNode(folder: string, pathElements: string[], isFolder?: boolean, subTag?: string): PathNode {
   var id = (buildCounter * 1000000) + nodeCounter++;
   var fsPath = pathElements.length > 0 ? path.join(folder, pathElements.join(path.sep)) : folder;
 
@@ -133,7 +221,7 @@ function createPathNode(folder, pathElements, isFolder, subTag) {
   };
 }
 
-function createFlatNode(fsPath, rootNode) {
+function createFlatNode(fsPath: string, rootNode?: PathNode): PathNode {
   var id = (buildCounter * 1000000) + nodeCounter++;
   var pathLabel = path.dirname(rootNode === undefined ? fsPath : path.relative(rootNode.fsPath, fsPath));
 
@@ -148,7 +236,7 @@ function createFlatNode(fsPath, rootNode) {
   };
 }
 
-function createTagNode(fsPath, tag) {
+function createTagNode(fsPath: string, tag: string): PathNode {
   var id = (buildCounter * 1000000) + nodeCounter++;
 
   return {
@@ -163,7 +251,7 @@ function createTagNode(fsPath, tag) {
   };
 }
 
-function createSubTagNode(subTag) {
+function createSubTagNode(subTag: string): PathNode {
   var id = (buildCounter * 1000000) + nodeCounter++;
 
   return {
@@ -179,7 +267,7 @@ function createSubTagNode(subTag) {
   };
 }
 
-function createTodoNode(result) {
+function createTodoNode(result: SearchMatch): TodoNode {
   var id = (buildCounter * 1000000) + nodeCounter++;
   var joined = result.match.substr(result.column - 1);
   if (result.extraLines) {
@@ -201,7 +289,7 @@ function createTodoNode(result) {
 
   var tagGroup = config.tagGroup(extracted.tag);
 
-  var todo = {
+  var todo: TodoNode = {
     type: TODO,
     fsPath: result.uri.fsPath,
     uri: result.uri,
@@ -224,11 +312,11 @@ function createTodoNode(result) {
     commentsRemoved.shift();
     result.extraLines.map(function(extraLine, index) {
       extraLine.match = commentsRemoved[index];
-      extraLine.uri = result.uri;
+      var childResult = Object.assign(extraLine, { uri: result.uri });
       if (extraLine.match) {
         var extraLineMatch = extraLine.match.trim();
         if (extraLineMatch && extraLineMatch != todo.tag) {
-          var extraLineNode = createTodoNode(extraLine);
+          var extraLineNode = createTodoNode(childResult);
           extraLineNode.isExtraLine = true;
           todo.extraLines.push(extraLineNode);
         }
@@ -239,8 +327,8 @@ function createTodoNode(result) {
   return todo;
 }
 
-function locateWorkspaceNode(filename) {
-  var result;
+export function locateWorkspaceNode(filename: string): PathNode | undefined {
+  var result: PathNode | undefined;
   nodes.map(function(node) {
     var workspacePath = node.fsPath + (node.fsPath.indexOf(path.sep) === node.fsPath.length - 1 ? '' : path.sep);
     if (node.isWorkspaceNode && (filename === node.fsPath || filename.indexOf(workspacePath) === 0)) {
@@ -250,15 +338,24 @@ function locateWorkspaceNode(filename) {
   return result;
 }
 
-function locateFlatChildNode(rootNode, result, tag, subTag) {
+function locateFlatChildNode(
+  rootNode: PathNode | undefined,
+  result: SearchMatch,
+  tag: string,
+  subTag?: string,
+): PathNode {
   var parentNodes = rootNode === undefined ? nodes : rootNode.nodes;
-  var parentNode;
+  var parentNode: PathNode | undefined;
 
   if (config.shouldGroupByTag() && tag) {
     var tagPath = tag;
     parentNode = parentNodes.find(findTagNode, tagPath);
     if (parentNode === undefined) {
-      parentNode = createPathNode(rootNode ? rootNode.fsPath : JSON.stringify(result), [tagPath], subTag);
+      parentNode = createPathNode(
+        rootNode ? rootNode.fsPath : JSON.stringify(result),
+        [tagPath],
+        subTag ? true : undefined,
+      );
       parentNode.tag = tagPath;
       parentNode.isRootTagNode = true;
       parentNodes.push(parentNode);
@@ -268,7 +365,11 @@ function locateFlatChildNode(rootNode, result, tag, subTag) {
     var subTagPath = subTag;
     parentNode = parentNodes.find(findSubTagNode, subTagPath);
     if (parentNode === undefined) {
-      parentNode = createPathNode(rootNode ? rootNode.fsPath : JSON.stringify(result), [subTagPath], subTag);
+      parentNode = createPathNode(
+        rootNode ? rootNode.fsPath : JSON.stringify(result),
+        [subTagPath],
+        subTag ? true : undefined,
+      );
       parentNode.subTag = subTagPath;
       parentNodes.push(parentNode);
     }
@@ -286,11 +387,16 @@ function locateFlatChildNode(rootNode, result, tag, subTag) {
   return childNode;
 }
 
-function locateTreeChildNode(rootNode, pathElements, tag, subTag) {
-  var childNode;
+function locateTreeChildNode(
+  rootNode: PathNode,
+  pathElements: string[],
+  tag: string,
+  subTag?: string,
+): PathNode | undefined {
+  var childNode: PathNode | undefined;
 
   var parentNodes = rootNode.nodes;
-  var parentNode;
+  var parentNode: PathNode | undefined;
 
   if (config.shouldGroupByTag() && tag) {
     parentNode = parentNodes.find(findTagNode, tag);
@@ -300,7 +406,7 @@ function locateTreeChildNode(rootNode, pathElements, tag, subTag) {
         tagPathList.push(subTag);
       }
       tagPathList.push(tag);
-      parentNode = createPathNode(rootNode ? rootNode.fsPath : JSON.stringify(result), tagPathList, subTag);
+      parentNode = createPathNode(rootNode.fsPath, tagPathList, subTag ? true : undefined);
       parentNode.isRootTagNode = true;
       parentNode.tag = tag;
       parentNodes.push(parentNode);
@@ -311,7 +417,7 @@ function locateTreeChildNode(rootNode, pathElements, tag, subTag) {
     if (parentNode === undefined) {
       var subTagPathList = [];
       subTagPathList.push(subTag);
-      parentNode = createPathNode(rootNode ? rootNode.fsPath : JSON.stringify(result), subTagPathList, subTag);
+      parentNode = createPathNode(rootNode.fsPath, subTagPathList, subTag ? true : undefined);
       parentNode.subTag = subTag;
       parentNodes.push(parentNode);
     }
@@ -337,8 +443,13 @@ function locateTreeChildNode(rootNode, pathElements, tag, subTag) {
   return childNode;
 }
 
-function countTags(child, tagCounts, forStatusBar, fileFilter) {
-  function countTag(node) {
+function countTags(
+  child: TreeNode,
+  tagCounts: Record<string, number>,
+  forStatusBar: boolean,
+  fileFilter?: string,
+): void {
+  function countTag(node: TreeNode) {
     if (isTodoNode(node)) {
       var tag = node.tag ? node.tag : 'TODO';
       if (isVisible(node) && (!fileFilter || fileFilter === node.fsPath)) {
@@ -369,7 +480,12 @@ function countTags(child, tagCounts, forStatusBar, fileFilter) {
   }
 }
 
-function countChildTags(children, tagCounts, forStatusBar, fileFilter) {
+function countChildTags(
+  children: TreeNode[],
+  tagCounts: Record<string, number>,
+  forStatusBar: boolean,
+  fileFilter?: string,
+): Record<string, number> {
   children.map(function(child) {
     return countTags(child, tagCounts, forStatusBar, fileFilter);
   });
@@ -384,13 +500,20 @@ function addWorkspaceFolders() {
   }
 }
 
-class TreeNodeProvider {
-  constructor(_context, debug, onTreeRefreshed) {
+export class TreeNodeProvider implements vscode.TreeDataProvider<TreeElement> {
+  declare readonly _context: vscode.ExtensionContext;
+  declare readonly _debug: (text: string) => void;
+  declare readonly onTreeRefreshed: (() => void) | undefined;
+  declare readonly _onDidChangeTreeData: vscode.EventEmitter<TreeElement | undefined>;
+  declare readonly onDidChangeTreeData: vscode.Event<TreeElement | undefined>;
+  declare nodesToGet: number;
+
+  constructor(_context: vscode.ExtensionContext, debug: (text: string) => void, onTreeRefreshed?: () => void) {
     this._context = _context;
     this._debug = debug;
     this.onTreeRefreshed = onTreeRefreshed;
 
-    this._onDidChangeTreeData = new vscode.EventEmitter();
+    this._onDidChangeTreeData = new vscode.EventEmitter<TreeElement | undefined>();
     this.onDidChangeTreeData = this._onDidChangeTreeData.event;
 
     this.nodesToGet = 0;
@@ -403,9 +526,9 @@ class TreeNodeProvider {
     this._onDidChangeTreeData.dispose();
   }
 
-  getChildren(node) {
+  getChildren(node?: TreeElement): TreeElement[] {
     if (node === undefined) {
-      var result = [];
+      var result: TreeElement[] = [];
 
       var availableNodes = nodes.filter(function(node) {
         return node.nodes === undefined || (node.nodes.length > 0);
@@ -417,7 +540,7 @@ class TreeNodeProvider {
         this.nodesToGet = result.length;
       }
 
-      var filterStatusNode = { label: '', notExported: true, isStatusNode: true };
+      var filterStatusNode: StatusNode = { label: '', notExported: true, isStatusNode: true, icon: 'issues' };
       var includeGlobs = utils.toGlobArray(this._context.workspaceState.get('includeGlobs'));
       var excludeGlobs = utils.toGlobArray(this._context.workspaceState.get('excludeGlobs'));
       var totalFilters = includeGlobs.length + excludeGlobs.length;
@@ -458,11 +581,11 @@ class TreeNodeProvider {
       }
 
       if (config.shouldShowScanModeInTree()) {
-        var scanMode = config.scanMode();
+        var scanMode: string = config.scanMode();
         if (scanMode === 'workspace') {
           scanMode += ' and open files';
         }
-        var scanModeNode = {
+        var scanModeNode: StatusNode = {
           label: 'Scan mode: ' + scanMode,
           notExported: true,
           isStatusNode: true,
@@ -471,7 +594,7 @@ class TreeNodeProvider {
         result.unshift(scanModeNode);
       }
 
-      var compacted = [];
+      var compacted: TreeElement[] = [];
       result.map(function(child) {
         if (child.isRootTagNode === true && child.nodes.length === 1) {
           compacted.push(child.nodes[0]);
@@ -497,25 +620,25 @@ class TreeNodeProvider {
     } else if (isTodoNode(node)) {
       if (node.extraLines && node.extraLines.length > 0) {
         return node.extraLines.filter(isVisible);
-      } else {
-        return node.text;
       }
     }
+    return [];
   }
 
-  getParent(node) {
+  getParent(node: TreeElement): PathNode | undefined {
     return node.parent;
   }
 
-  getTreeItem(node) {
-    var treeItem;
+  getTreeItem(node: TreeElement): TodoTreeItem {
+    var treeItem: TodoTreeItem;
     try {
       treeItem = new vscode.TreeItem(node.label + (node.pathLabel ? (' ' + node.pathLabel) : ''));
     } catch (e) {
       console.log('Failed to create tree item: ' + e);
+      throw e;
     }
 
-    treeItem.id = node.id;
+    treeItem.id = node.id === undefined ? undefined : String(node.id);
     treeItem.fsPath = node.fsPath;
 
     treeItem.collapsibleState = vscode.TreeItemCollapsibleState.None;
@@ -535,7 +658,7 @@ class TreeNodeProvider {
 
       if (isPathNode(node)) {
         if (config.shouldCompactFolders() && node.tag === undefined) {
-          var onlyChild = node.nodes.filter(isPathNode).length === 1 ? node.nodes[0] : undefined;
+          var onlyChild = node.nodes.filter(isPathNode).length === 1 ? node.nodes.find(isPathNode) : undefined;
           var onlyChildParent = node;
           while (
             onlyChild && onlyChild.nodes.filter(isPathNode).length > 0
@@ -543,7 +666,7 @@ class TreeNodeProvider {
           ) {
             treeItem.label += '/' + onlyChild.label;
             onlyChildParent = onlyChild;
-            onlyChild = onlyChild.nodes[0];
+            onlyChild = onlyChild.nodes.find(isPathNode);
           }
         }
 
@@ -578,6 +701,7 @@ class TreeNodeProvider {
             url = utils.formatLabel(url, node);
             treeItem.command = {
               command: 'todo-tree.openUrl',
+              title: node.label,
               arguments: [
                 url,
               ],
@@ -622,13 +746,14 @@ class TreeNodeProvider {
 
         treeItem.command = {
           command: 'todo-tree.revealInFile',
+          title: node.label,
           arguments: [
             node.uri ? node.uri : vscode.Uri.file(node.fsPath),
             { selection: todoSelection },
           ],
         };
       }
-    } else {
+    } else if (node.isStatusNode) {
       treeItem.description = node.label;
       treeItem.label = '';
       treeItem.tooltip = node.tooltip;
@@ -636,7 +761,7 @@ class TreeNodeProvider {
     }
 
     if (config.shouldShowCounts() && isPathNode(node)) {
-      var tagCounts = {};
+      var tagCounts: Record<string, number> = {};
       countTags(node, tagCounts, false);
       var total = Object.values(tagCounts).reduce(function(a, b) {
         return a + b;
@@ -668,7 +793,7 @@ class TreeNodeProvider {
     return treeItem;
   }
 
-  clear(folders) {
+  clear(folders: readonly WorkspaceRoot[] | undefined): void {
     nodes = [];
 
     workspaceFolders = folders;
@@ -685,11 +810,11 @@ class TreeNodeProvider {
 
     this.sort();
 
-    this._onDidChangeTreeData.fire();
+    this._onDidChangeTreeData.fire(undefined);
   }
 
-  filter(text, children) {
-    var matcher = new RegExp(text, config.showFilterCaseSensitive() ? '' : 'i');
+  filter(text: string | undefined, children?: TreeNode[]): void {
+    var matcher = new RegExp(text ?? '', config.showFilterCaseSensitive() ? '' : 'i');
 
     if (children === undefined) {
       currentFilter = text;
@@ -715,13 +840,13 @@ class TreeNodeProvider {
     });
   }
 
-  clearTreeFilter(children) {
+  clearTreeFilter(children?: TreeNode[]): void {
     currentFilter = undefined;
 
     if (children === undefined) {
       children = nodes;
     }
-    children.forEach(function(child) {
+    children.forEach(function(this: TreeNodeProvider, child) {
       child.visible = true;
       if (child.nodes !== undefined) {
         this.clearTreeFilter(child.nodes);
@@ -732,7 +857,7 @@ class TreeNodeProvider {
     }, this);
   }
 
-  add(result) {
+  add(result: SearchMatch): void {
     if (nodes.length === 0) {
       addWorkspaceFolders();
     }
@@ -747,7 +872,7 @@ class TreeNodeProvider {
     if (config.shouldHideFromTree(todoNode.tag ? todoNode.tag : todoNode.label)) {
       todoNode.hidden = true;
     }
-    var childNode;
+    var childNode: PathNode | undefined;
 
     var tagPath = todoNode.subTag ? todoNode.tag + ' (' + todoNode.subTag + ')' : todoNode.tag;
 
@@ -781,7 +906,7 @@ class TreeNodeProvider {
       childNode = locateFlatChildNode(rootNode, result, todoNode.tag, todoNode.subTag);
     } else if (rootNode) {
       var relativePath = path.relative(rootNode.fsPath, fullPath);
-      var pathElements = [];
+      var pathElements: string[] = [];
       if (relativePath !== '') {
         pathElements = relativePath.split(path.sep);
       }
@@ -809,10 +934,10 @@ class TreeNodeProvider {
     }
   }
 
-  reset(uri, children) {
+  reset(uri: FileUri, children?: TreeNode[]): TreeNode[] {
     var fullPath = uri.scheme === 'file' ? uri.fsPath : path.join(uri.authority, uri.fsPath);
     var root = children === undefined;
-    children = (root ? nodes : children).filter(function(child) {
+    children = (children === undefined ? nodes : children).filter(function(this: TreeNodeProvider, child) {
       if (child.nodes !== undefined) {
         child.nodes = this.reset(uri, child.nodes);
       }
@@ -822,10 +947,10 @@ class TreeNodeProvider {
     return children;
   }
 
-  remove(callback, uri, children) {
+  remove(callback: ((filename: string) => void) | null | undefined, uri: FileUri, children?: TreeNode[]): TreeNode[] {
     var fullPath = uri.scheme === 'file' ? uri.fsPath : path.join(uri.authority, uri.fsPath);
 
-    function removeNodesByFilename(children, me) {
+    function removeNodesByFilename(children: TreeNode[], me: TreeNodeProvider) {
       return children.filter(function(child) {
         if (child.nodes !== undefined) {
           child.nodes = me.remove(callback, uri, child.nodes);
@@ -842,7 +967,7 @@ class TreeNodeProvider {
       }, me);
     }
 
-    function removeEmptyNodes(children, me) {
+    function removeEmptyNodes(children: TreeNode[], me: TreeNodeProvider) {
       return children.filter(function(child) {
         if (child.nodes !== undefined) {
           child.nodes = me.remove(callback, uri, child.nodes);
@@ -874,11 +999,11 @@ class TreeNodeProvider {
     return children;
   }
 
-  getElement(filename, found, children) {
+  getElement(filename: string, found: (node: TreeNode) => void, children?: TreeNode[]): void {
     if (children === undefined) {
       children = nodes;
     }
-    children.forEach(function(child) {
+    children.forEach(function(this: TreeNodeProvider, child) {
       if (child.fsPath === filename) {
         found(child);
       } else if (child.nodes !== undefined) {
@@ -887,7 +1012,7 @@ class TreeNodeProvider {
     }, this);
   }
 
-  setExpanded(path, expanded) {
+  setExpanded(path: string, expanded: boolean): void {
     expandedNodes[path] = expanded;
     this._context.workspaceState.update('expandedNodes', expandedNodes);
   }
@@ -897,21 +1022,22 @@ class TreeNodeProvider {
     this._context.workspaceState.update('expandedNodes', expandedNodes);
   }
 
-  getTagCountsForStatusBar(fileFilter) {
-    var tagCounts = {};
+  getTagCountsForStatusBar(fileFilter?: string): Record<string, number> {
+    var tagCounts: Record<string, number> = {};
     return countChildTags(nodes, tagCounts, true, fileFilter);
   }
 
-  getTagCountsForActivityBar() {
-    var tagCounts = {};
+  getTagCountsForActivityBar(): Record<string, number> {
+    var tagCounts: Record<string, number> = {};
     return countChildTags(nodes, tagCounts, false);
   }
 
-  exportChildren(parent, children) {
-    children.forEach(function(child) {
+  exportChildren(parent: ExportTree, children: TreeElement[]): ExportTree {
+    children.forEach(function(this: TreeNodeProvider, child) {
       if (child.type === PATH) {
-        parent[child.label] = {};
-        this.exportChildren(parent[child.label], this.getChildren(child));
+        const branch: ExportTree = {};
+        parent[child.label] = branch;
+        this.exportChildren(branch, this.getChildren(child));
       } else if (!child.notExported) {
         var format = config.labelFormat();
         var itemLabel = 'line ' + (child.line + 1);
@@ -926,14 +1052,14 @@ class TreeNodeProvider {
     return parent;
   }
 
-  exportTree() {
-    var exported = {};
+  exportTree(): ExportTree {
+    var exported: ExportTree = {};
     var children = this.getChildren();
     exported = this.exportChildren(exported, children);
     return exported;
   }
 
-  getFirstNode() {
+  getFirstNode(): TreeNode | undefined {
     var availableNodes = nodes.filter(function(node) {
       return node.nodes === undefined || (node.nodes.length > 0);
     });
@@ -948,12 +1074,12 @@ class TreeNodeProvider {
     return treeHasSubTags;
   }
 
-  sort(children) {
+  sort(children?: TreeNode[]): void {
     if (config.shouldSortTree()) {
       if (children === undefined) {
         children = nodes;
       }
-      children.forEach(function(child) {
+      children.forEach(function(this: TreeNodeProvider, child) {
         if (child.nodes !== undefined) {
           this.sort(child.nodes);
         }
@@ -971,6 +1097,3 @@ class TreeNodeProvider {
     }
   }
 }
-
-exports.TreeNodeProvider = TreeNodeProvider;
-exports.locateWorkspaceNode = locateWorkspaceNode;

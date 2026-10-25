@@ -6,6 +6,13 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+## [1.0.16] - 2026-10-25
+
+### Changed
+
+- Model path, TODO and status nodes explicitly and implement the VS Code tree-provider contract in TypeScript.
+- Normalize grouped folder flags, supply string item IDs and command titles, and select path children correctly during folder compaction.
+
 ## [1.0.15] - 2026-10-25
 
 ### Changed

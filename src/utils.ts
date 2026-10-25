@@ -212,7 +212,7 @@ export function extractTag(text: string, matchOffset?: number): TagParts {
     }
   }
   return {
-    tag: tagMatch ? originalTag : '',
+    tag: tagMatch ? (originalTag ?? '') : '',
     withoutTag: text,
     before: before,
     after: after,

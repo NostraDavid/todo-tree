@@ -1,6 +1,6 @@
 import type { OutputChannel, Uri } from 'vscode';
 
-export type FileUri = Pick<Uri, 'fsPath' | 'scheme' | 'toString'>;
+export type FileUri = Pick<Uri, 'fsPath' | 'scheme' | 'authority' | 'toString'>;
 export interface MatchContent {
   line: number;
   column: number;
@@ -11,6 +11,7 @@ export interface SearchMatch extends MatchContent {
   uri: FileUri;
   fsPath?: string;
   added?: boolean;
+  expanded?: boolean;
 }
 export interface RegexConfiguration {
   tags: string[];
@@ -40,7 +41,7 @@ export interface Highlight {
 }
 export type ScanMode = 'workspace' | 'open files' | 'current file' | 'workspace only';
 export interface TagParts {
-  tag: string | undefined;
+  tag: string;
   withoutTag: string;
   before: string;
   after: string;

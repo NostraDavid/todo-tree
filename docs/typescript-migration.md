@@ -5,8 +5,10 @@ The extension keeps its existing settings, commands, publisher identity, and beh
 ## Sequence
 
 - [x] Compile the existing runtime and migrate the four static catalogs.
-- [ ] Type configuration, highlighting attributes, search results, ripgrep, and utilities.
-- [ ] Type tree nodes, icons, highlighting, and editor orchestration.
+- [x] Type configuration, highlighting attributes, search results, ripgrep, and utilities.
+- [x] Type icons, colors, and editor decorations.
+- [x] Model tree nodes and the VS Code tree-provider API.
+- [ ] Type editor orchestration and extension commands.
 - [ ] Convert tests, build configuration, and maintenance scripts to TypeScript.
 - [ ] Remove the temporary JavaScript compiler allowance and verify the packaged extension.
 

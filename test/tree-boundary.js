@@ -16,6 +16,38 @@ function fixture(overrides = {}) {
   Object.assign(values, overrides);
   const state = new Map();
   const vscode = {
+    Uri: { file: fsPath => ({ scheme: 'file', authority: '', fsPath }) },
+    TreeItem: class {
+      constructor(label) {
+        this.label = label;
+      }
+    },
+    ThemeColor: class {
+      constructor(id) {
+        this.id = id;
+      }
+    },
+    ThemeIcon: class {
+      static Folder = { id: 'folder' };
+      static File = { id: 'file' };
+      constructor(id, color) {
+        this.id = id;
+        this.color = color;
+      }
+    },
+    Position: class {
+      constructor(line, character) {
+        this.line = line;
+        this.character = character;
+      }
+    },
+    Selection: class {
+      constructor(anchor, active) {
+        this.anchor = anchor;
+        this.active = active;
+      }
+    },
+    TreeItemCollapsibleState: { None: 0, Collapsed: 1, Expanded: 2 },
     EventEmitter: class {
       constructor() {
         this.event = () => ({ dispose() {} });
@@ -73,7 +105,7 @@ function fixture(overrides = {}) {
   const { TreeNodeProvider } = load('tree.js');
   const provider = new TreeNodeProvider(context, () => {});
   const workspaceRoot = path.resolve('todo-tree-fixture-workspace');
-  const uri = filename => ({ scheme: 'file', fsPath: path.join(workspaceRoot, filename) });
+  const uri = filename => ({ scheme: 'file', authority: '', fsPath: path.join(workspaceRoot, filename) });
   provider.clear([{ name: 'fixture', uri: uri('') }]);
   const add = (filename, text, line = 1) => provider.add({ uri: uri(filename), match: text, column: 1, line });
   function todos(node) {
