@@ -156,7 +156,7 @@ function isValidScheme(uri) {
 
 function shouldUseBuiltInFileExcludes() {
   var useBuiltInExcludes = vscode.workspace.getConfiguration('todo-tree.filtering').useBuiltInExcludes;
-  return useBuiltInExcludes === 'file exclude' || useBuiltInExcludes === 'file and search excludes';
+  return useBuiltInExcludes === 'file excludes' || useBuiltInExcludes === 'file and search excludes';
 }
 
 function shouldUseBuiltInSearchExcludes() {

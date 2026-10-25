@@ -6,6 +6,13 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-10-25
+
+### Fixed
+
+- Respect the declared file-excludes mode as well as the combined and search-only modes.
+- Cover all four built-in exclude settings with regression tests.
+
 ## [1.0.3] - 2026-10-25
 
 ### Fixed

@@ -110,3 +110,19 @@ QUnit.test('config.ripgrepPath finds current universal binaries on every support
     });
   });
 });
+
+QUnit.test('built-in excludes distinguish all four configured modes', function(assert) {
+  var fixture = require('./tree-boundary').fixture;
+  for (
+    var choice of [
+      ['none', false, false],
+      ['file excludes', true, false],
+      ['search excludes', false, true],
+      ['file and search excludes', true, true],
+    ]
+  ) {
+    var config = fixture({ 'todo-tree.filtering.useBuiltInExcludes': choice[0] }).config;
+    assert.strictEqual(config.shouldUseBuiltInFileExcludes(), choice[1], choice[0] + ': files');
+    assert.strictEqual(config.shouldUseBuiltInSearchExcludes(), choice[2], choice[0] + ': search');
+  }
+});
