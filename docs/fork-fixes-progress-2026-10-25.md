@@ -1,6 +1,6 @@
 # Uitvoering van het verbeterplan
 
-De afgesproken correctheidsfixes zijn lokaal geïmplementeerd en verpakt. TypeScript-migratie blijft op verzoek uitgesteld. Lokale commits en tags zijn nog geen gepubliceerde GitHub- of Marketplace-releases.
+De afgesproken correctheidsfixes zijn geïmplementeerd en als 23 kleine patchreleases op GitHub gepubliceerd na toestemming van de gebruiker. TypeScript-migratie blijft op verzoek uitgesteld. Marketplace-publicatie blijft handmatig.
 
 De eigen issuetrackers voor DotENV en Better Comments zijn met afzonderlijke toestemming ingeschakeld en teruggelezen. Marketplace-installatie blijft handmatig. Nixcfg en de bestaande editorprofielen zijn bij deze fixes niet aangepast.
 
@@ -48,7 +48,7 @@ De laatste versie bouwt voor Node en web. De toegevoegde JavaScript-grammar deel
 | 1.0.2  | `89c9d89` | Onvolledige interpolatie herstelt, geldige multilinewaarden blijven behouden. |    11 |
 | 1.0.3  | `97f5dc7` | Constantekleuren gelden alleen voor volledige waarden.                        |    12 |
 
-De fork heeft een eigen versiereeks. De geërfde upstreamtag `v1.0.1` is geen NostraDavid-release. De eigen lokale tag is daarom op uitdrukkelijke gebruikersinstructie gecorrigeerd. Upstream is niet aangepast en geen gepubliceerde eigen release is herschreven.
+De fork heeft een eigen versiereeks. De geërfde upstreamtag `v1.0.1` is geen NostraDavid-release. De tag in de eigen fork is daarom op uitdrukkelijke gebruikersinstructie gecorrigeerd met een lease op het geërfde tagobject. Upstream is niet aangepast en geen gepubliceerde eigen release is herschreven.
 
 ## Verpakte controle in VS Code
 
@@ -85,10 +85,22 @@ De bestaande hooks draaien de relevante controles ook bij commits. De laatste su
 
 De Todo Tree-releaseworkflow slaat Marketplace-publicatie met een melding over wanneer `VSCE_PAT` ontbreekt. De GitHub-VSIX blijft beschikbaar voor handmatig uploaden.
 
+## Publicatie op GitHub
+
+Op 25 oktober 2026 zijn alle 23 voorbereide patchversies gepubliceerd, ieder met een eigen changelog en VSIX. De nieuwste versies zijn:
+
+- [Todo Tree v1.0.12](https://github.com/NostraDavid/vscode-todo-tree/releases/tag/v1.0.12), met het [VSIX-bestand](https://github.com/NostraDavid/vscode-todo-tree/releases/download/v1.0.12/nostradavid-todo-tree-1.0.12.vsix). De [platformcontrole](https://github.com/NostraDavid/vscode-todo-tree/actions/runs/40219428721) slaagt op alle drie systemen.
+- [Better Comments v1.0.8](https://github.com/NostraDavid/vscode-better-comments/releases/tag/v1.0.8), met het [VSIX-bestand](https://github.com/NostraDavid/vscode-better-comments/releases/download/v1.0.8/nostradavid-better-comments-1.0.8.vsix). De [platformcontrole](https://github.com/NostraDavid/vscode-better-comments/actions/runs/40219435868) slaagt op alle drie systemen.
+- [DotENV v1.0.3](https://github.com/NostraDavid/vscode-dotenv/releases/tag/v1.0.3), met het [VSIX-bestand](https://github.com/NostraDavid/vscode-dotenv/releases/download/v1.0.3/nostradavid-dotenv-1.0.3.vsix). De [platformcontrole](https://github.com/NostraDavid/vscode-dotenv/actions/runs/40219441080) slaagt op alle drie systemen.
+
+Alle 23 release-assets zijn teruggedownload en op publisher, extensienaam, versie, changelog en bestandsinhoud gecontroleerd. Twintig archieven zijn byte-identiek aan de lokale pakketten. De drie door CI gebouwde DotENV-archieven hebben identieke bestandsinhoud. De bestaande releases en hun assets zijn afzonderlijk gecontroleerd op behoud.
+
+Er is geen `VSCE_PAT` ingesteld in deze repositories. De GitHub-publicatie vereist geen Marketplace-token of nieuwe Azure-organisatie. Upload de nieuwste GitHub-VSIX via [publisherbeheer](https://marketplace.visualstudio.com/manage/publishers/nostradavid) om ook Marketplace bij te werken.
+
 ## Uitgesteld en beperkingen
 
 - De TypeScript-migratie begint pas na deze fixronde en een volgende opdracht.
 - Embedded HTML-, Vue- en Svelte-ondersteuning in Better Comments, DotENV-backticks en een nieuwe formatter blijven afzonderlijke features.
-- Windows, macOS, remote extension hosts, de minimale VS Code-versie en een browser extension host zijn bij deze uitvoering niet native gedraaid. Platformpaden en procesgedrag hebben portable regressies; de bestaande CI-matrix kan na een push de platformruns uitvoeren.
+- De CI-tests, builds en verpakking slagen op Linux, macOS en Windows. De echte editorcontroles zijn op Linux uitgevoerd. Native editorcontroles op macOS, Windows, remote extension hosts, de minimale VS Code-versie en een browser extension host zijn niet uitgevoerd.
 - De contextmenuvoorwaarde is getest op de echte manifestexpressie. Een afzonderlijke visuele muiscontrole in een andere extensie is niet uitgevoerd.
-- Oude GitHub-tags en Marketplace-versies zijn niet gewijzigd. Nieuwe commits, tags en pakketten zijn nog lokaal. Publicatie volgt pas na de benodigde toestemming.
+- Eerder gepubliceerde eigen releases en hun assets zijn behouden. De geërfde DotENV-tag is in de eigen fork vervangen door onze gelijknamige versie. De Marketplace-versies zijn in deze ronde niet bijgewerkt.
