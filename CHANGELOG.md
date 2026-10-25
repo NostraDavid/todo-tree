@@ -6,6 +6,13 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+## [1.0.11] - 2026-10-25
+
+### Fixed
+
+- Keep a pending refresh per edited document, so editing A and B does not silently cancel B. Cancel pending work when its document closes or the extension stops.
+- Deduplicate normalized match positions within the current file instead of rescanning every earlier result for every match. Preserve custom regex deduplication and other files.
+
 ## [1.0.10] - 2026-10-25
 
 ### Fixed

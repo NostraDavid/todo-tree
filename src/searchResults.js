@@ -35,12 +35,6 @@ function count() {
   return searchResults.length;
 }
 
-function contains(result) {
-  return searchResults.filter(function(match) {
-    return match.uri === result.uri && match.line == result.line && match.column == result.column;
-  }).length > 0;
-}
-
 function markAsNotAdded() {
   searchResults.forEach(function(match) {
     match.added = false;
@@ -57,6 +51,5 @@ module.exports.remove = remove;
 module.exports.addToTree = addToTree;
 module.exports.containsMarkdown = containsMarkdown;
 module.exports.count = count;
-module.exports.contains = contains;
 module.exports.markAsNotAdded = markAsNotAdded;
 module.exports.filter = filter;

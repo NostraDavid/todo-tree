@@ -21,7 +21,7 @@ var currentFilter;
 var interrupted = false;
 var selectedDocument;
 var refreshTimeout;
-var fileRefreshTimeout;
+var fileRefreshTimers = new Map();
 var hideTimeout;
 var autoGitRefreshTimer;
 var periodicRefreshTimer;
@@ -711,6 +711,7 @@ function activate(context) {
     }
 
     var matchesFound = false;
+    var seen = new Set();
 
     searchResults.remove(document.uri);
 
@@ -745,7 +746,9 @@ function activate(context) {
             sections.map(extractExtraLines);
           }
 
-          if (!searchResults.contains(result)) {
+          var location = result.line + ':' + result.column;
+          if (!seen.has(location)) {
+            seen.add(location);
             searchResults.add(result);
             matchesFound = true;
           }
@@ -1078,8 +1081,14 @@ function activate(context) {
 
         if (config.isValidScheme(document.uri) && path.basename(document.fileName) !== 'settings.json') {
           if (shouldRefreshFile()) {
-            clearTimeout(fileRefreshTimeout);
-            fileRefreshTimeout = setTimeout(refreshFile, 500, document);
+            clearTimeout(fileRefreshTimers.get(document));
+            fileRefreshTimers.set(
+              document,
+              setTimeout(function() {
+                fileRefreshTimers.delete(document);
+                refreshFile(document);
+              }, 500),
+            );
           }
         }
       } else {
@@ -1572,6 +1581,8 @@ function activate(context) {
     }));
 
     context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(document => {
+      clearTimeout(fileRefreshTimers.get(document));
+      fileRefreshTimers.delete(document);
       function removeFromTree(uri) {
         searchResults.remove(uri);
         provider.remove(function() {
@@ -1719,7 +1730,8 @@ function deactivate() {
   clearInterval(autoGitRefreshTimer);
   clearInterval(periodicRefreshTimer);
   clearTimeout(refreshTimeout);
-  clearTimeout(fileRefreshTimeout);
+  fileRefreshTimers.forEach(timer => clearTimeout(timer));
+  fileRefreshTimers.clear();
   clearTimeout(hideTimeout);
   var pending = Array.from(gitChecks.values());
   gitChecks.clear();

@@ -11,7 +11,8 @@ function extensionClosures(names, bindings) {
   vm.runInContext(globals.join('\n'), sandbox);
   Object.assign(sandbox, bindings);
   for (const name of names) {
-    const indent = name === 'deactivate' ? '' : '  ';
+    const indent = source.match(new RegExp('^( *)function ' + name + '\\(', 'm'))?.[1];
+    if (indent === undefined) throw new Error('Cannot locate actual function ' + name);
     const match = source.match(
       new RegExp('^' + indent + 'function ' + name + '\\([^\\n]*\\) \\{\\n[\\s\\S]*?^' + indent + '\\}', 'm'),
     );

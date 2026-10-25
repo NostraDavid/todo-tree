@@ -35,7 +35,6 @@ function watcher() {
     autoGitRefreshTimer: undefined,
     periodicRefreshTimer: undefined,
     refreshTimeout: undefined,
-    fileRefreshTimeout: undefined,
     hideTimeout: undefined,
     lastGitHead: {},
     debug() {},
