@@ -28,3 +28,7 @@ declare module '@primer/octicons' {
   const icons: Record<string, { toSVG(options: Record<string, string | number>): string }>;
   export = icons;
 }
+
+declare module 'treeify' {
+  export function asTree(value: object, showValues?: boolean): string;
+}

@@ -41,10 +41,18 @@ function fixture(overrides = {}) {
         this.character = character;
       }
     },
+    Range: class {
+      constructor(start, end) {
+        this.start = start;
+        this.end = end;
+      }
+    },
     Selection: class {
       constructor(anchor, active) {
         this.anchor = anchor;
         this.active = active;
+        this.start = anchor;
+        this.end = active;
       }
     },
     TreeItemCollapsibleState: { None: 0, Collapsed: 1, Expanded: 2 },

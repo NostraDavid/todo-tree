@@ -1,5 +1,5 @@
 const { fixture } = require('./tree-boundary');
-const { filterCommand } = require('./extension-closures');
+const { registeredCommand } = require('./extension-closures');
 
 for (const term of ['(', undefined, 'banana', '']) {
   QUnit.test(`filter command commits only accepted input, term=${JSON.stringify(term)}`, async assert => {
@@ -32,7 +32,7 @@ for (const term of ['(', undefined, 'banana', '']) {
       },
     };
     f.context.subscriptions = [];
-    const sandbox = filterCommand({
+    const sandbox = registeredCommand('todo-tree.filter', {
       vscode,
       context: f.context,
       provider: f.provider,

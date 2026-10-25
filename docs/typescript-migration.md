@@ -8,7 +8,7 @@ The extension keeps its existing settings, commands, publisher identity, and beh
 - [x] Type configuration, highlighting attributes, search results, ripgrep, and utilities.
 - [x] Type icons, colors, and editor decorations.
 - [x] Model tree nodes and the VS Code tree-provider API.
-- [ ] Type editor orchestration and extension commands.
+- [x] Type editor orchestration and extension commands.
 - [ ] Convert tests, build configuration, and maintenance scripts to TypeScript.
 - [ ] Remove the temporary JavaScript compiler allowance and verify the packaged extension.
 

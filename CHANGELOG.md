@@ -6,6 +6,14 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+## [1.0.17] - 2026-10-25
+
+### Changed
+
+- Finish the runtime migration with typed extension state, commands, editor events and workspace settings.
+- Remove the temporary JavaScript compiler allowance; the complete runtime is now checked TypeScript.
+- Handle missing editors/workspace storage and cache-read failures, keep previous-navigation matches local, and validate legacy arrays explicitly.
+
 ## [1.0.16] - 2026-10-25
 
 ### Changed

@@ -22,10 +22,14 @@ function extensionClosures(names, bindings) {
   return sandbox;
 }
 
-function filterCommand(bindings) {
+function registeredCommand(command, bindings) {
   const source = fs.readFileSync(path.join(root, 'out/src/extension.js'), 'utf8');
   const match = source.match(
-    /^( *)context\.subscriptions\.push\(vscode\.commands\.registerCommand\('todo-tree\.filter',[\s\S]*?^\1\}\)\);/m,
+    new RegExp(
+      "^( *)context\\.subscriptions\\.push\\(vscode\\.commands\\.registerCommand\\('" + command.replaceAll('.', '\\.')
+        + "',[\\s\\S]*?^\\1\\}\\)\\);",
+      'm',
+    ),
   );
   if (!match) throw new Error('Cannot locate actual filter registration');
   const sandbox = vm.createContext({ ...bindings, console });
@@ -44,4 +48,4 @@ function restoreFilter(bindings) {
   return sandbox;
 }
 
-module.exports = { extensionClosures, filterCommand, restoreFilter };
+module.exports = { extensionClosures, registeredCommand, restoreFilter };
