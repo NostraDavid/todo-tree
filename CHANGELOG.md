@@ -81,7 +81,7 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ### Fixed
 
-- Preserve other files when refreshing grouped results in tree, flat and tags-only views. Based on upstream PR #832 by baincd.
+- Preserve other files when refreshing grouped results in tree, flat and tags-only views. Based on upstream PR [#832](https://github.com/Gruntfuggly/todo-tree/pull/832) by baincd.
 - Removing the first member of a shared tag group no longer deletes results from its other members.
 - Correct the grouping setting names in the README.
 
@@ -96,7 +96,7 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ### Fixed
 
-- Find current VS Code bundled ripgrep on Linux, macOS and Windows, including ARM64 and unpacked installations. Based on upstream PR #924 by LazarusX.
+- Find current VS Code bundled ripgrep on Linux, macOS and Windows, including ARM64 and unpacked installations. Based on upstream PR [#924](https://github.com/Gruntfuggly/todo-tree/pull/924) by LazarusX.
 - Name the exact executable setting when ripgrep is missing.
 
 ### Added
