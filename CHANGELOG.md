@@ -6,6 +6,16 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+## [1.0.5] - 2026-10-25
+
+### Fixed
+
+- Launch ripgrep directly with argument arrays, preserving executable/filename spaces, parentheses, quotes and dollar signs.
+- Parse quoted custom arguments and simple environment references without executing shell operators.
+- Give every search its own temporary pattern file and clean it after success, errors or cancellation.
+- Distinguish no matches from process failures and output-buffer errors; stop all active and queued searches when cancelled.
+- Bundle runtime dependency license texts and original packaged license declarations in the VSIX.
+
 ## [1.0.4] - 2026-10-25
 
 ### Fixed

@@ -614,3 +614,7 @@ Lots of the icons have now been updated by [johnletey](https://github.com/johnle
 #### Translations
 
 Simplified Chinese translation by [loniceras](https://github.com/loniceras).
+
+### Ripgrep arguments
+
+The executable, search regex, globs and filenames are passed directly to ripgrep. `todo-tree.ripgrep.ripgrepArgs` accepts quoted arguments, escaped spaces and simple `$NAME` or `${NAME}` environment references. Quote Windows paths containing backslashes. Shell operators, pipelines, redirection and command substitution are rejected. Use `$HOME` for home-relative paths in this argument string; the separate executable setting still expands `~`.

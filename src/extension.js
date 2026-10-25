@@ -5,7 +5,6 @@ var ripgrep = require('./ripgrep');
 var path = require('path');
 var treeify = require('treeify');
 var fs = require('fs');
-var crypto = require('crypto');
 var child_process = require('child_process');
 
 var tree = require('./tree.js');
@@ -326,8 +325,7 @@ function activate(context) {
     var submoduleExcludeGlobs = context.workspaceState.get('submoduleExcludeGlobs') || [];
 
     var options = {
-      regex: '"' + utils.getRegexSource() + '"',
-      unquotedRegex: utils.getRegexSource(),
+      regex: utils.getRegexSource(),
       rgPath: config.ripgrepPath(),
     };
 
@@ -359,8 +357,7 @@ function activate(context) {
     options.multiline = utils.getRegexSource().indexOf('\\n') > -1 || c.get('regex.enableMultiLine') === true;
 
     if (fs.existsSync(context.storageUri.fsPath) === true && c.get('ripgrep.usePatternFile') === true) {
-      var patternFileName = crypto.randomBytes(6).readUIntLE(0, 6).toString(36) + '.txt';
-      options.patternFilePath = path.join(context.storageUri.fsPath, patternFileName);
+      options.patternFileDirectory = context.storageUri.fsPath;
     }
 
     if (c.get('filtering.includeHiddenFiles')) {
@@ -420,7 +417,10 @@ function activate(context) {
 
   function iterateSearchList() {
     if (searchList.length > 0) {
-      return searchList.reduce((p, entry) => p.finally(() => search(getOptions(entry))), Promise.resolve())
+      return searchList.reduce(
+        (p, entry) => p.finally(() => interrupted ? undefined : search(getOptions(entry))),
+        Promise.resolve(),
+      )
         .finally(() => {
           debug('Found ' + searchResults.count() + ' items');
           if (vscode.workspace.getConfiguration('todo-tree.ripgrep').get('passGlobsToRipgrep') !== true) {

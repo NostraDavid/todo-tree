@@ -11,9 +11,11 @@
 'use strict';
 const child_process = require('child_process');
 const fs = require('fs');
+const path = require('path');
+const parse = require('shell-quote').parse;
 const utils = require('./utils');
 
-var currentProcess;
+var activeProcesses = new Map();
 
 function RipgrepError(error, stderr) {
   this.message = error;
@@ -63,7 +65,42 @@ function formatResults(stdout, multiline) {
     .map((line) => new Match(line));
 }
 
-module.exports.search = function ripGrep(cwd, options) {
+function parseAdditional(value, cwd) {
+  if (value === undefined) value = '';
+  if (typeof value !== 'string') throw new Error('todo-tree.ripgrep.ripgrepArgs must be a string');
+  var quote;
+  var escaped = false;
+  var ansi = false;
+  for (var index = 0; index < value.length; ++index) {
+    var character = value[index];
+    if (escaped) {
+      escaped = false;
+    } else if (quote === "'") {
+      if (ansi && character === '\\') escaped = true;
+      else if (character === "'") quote = undefined;
+    } else if (character === '\\') {
+      escaped = true;
+    } else if (quote === '"') {
+      if (character === '"') quote = undefined;
+    } else if (character === "'" || character === '"') {
+      quote = character;
+      ansi = character === "'" && value[index - 1] === '$';
+    }
+  }
+  if (quote || escaped) throw new Error('Unclosed quote or trailing escape in todo-tree.ripgrep.ripgrepArgs');
+  var environment = Object.assign(Object.create(null), process.env, { PWD: cwd });
+  return parse(value, environment, { splitUnquoted: true }).map(function(argument) {
+    if (typeof argument === 'string') return argument;
+    if (argument.op === 'glob') return argument.pattern;
+    throw new Error('Shell operators and comments are not supported in todo-tree.ripgrep.ripgrepArgs');
+  });
+}
+
+module.exports.search = async function ripGrep(cwd, options) {
+  if (!cwd) throw new Error('No cwd provided');
+  if (!options) throw new Error('No search options provided');
+  if (!fs.existsSync(options.rgPath)) throw new Error('ripgrep executable not found (' + options.rgPath + ')');
+  if (!fs.existsSync(cwd)) throw new Error('root folder not found (' + cwd + ')');
   function debug(text) {
     if (options.outputChannel) {
       var now = new Date();
@@ -73,102 +110,56 @@ module.exports.search = function ripGrep(cwd, options) {
       );
     }
   }
-
-  if (!cwd) {
-    return Promise.reject({ error: 'No `cwd` provided' });
-  }
-
-  if (arguments.length === 1) {
-    return Promise.reject({ error: 'No search term provided' });
-  }
-
-  options.regex = options.regex || '';
-  options.globs = options.globs || [];
-
-  var rgPath = options.rgPath;
-  var isWin = process.platform.startsWith('win');
-
-  if (!fs.existsSync(rgPath)) {
-    return Promise.reject({ error: 'ripgrep executable not found (' + rgPath + ')' });
-  }
-  if (!fs.existsSync(cwd)) {
-    return Promise.reject({ error: 'root folder not found (' + cwd + ')' });
-  }
-
-  if (isWin) {
-    rgPath = '"' + rgPath + '"';
-  } else {
-    rgPath = rgPath.replace(/ /g, '\\ ');
-  }
-
-  let execString = rgPath + ' --no-messages --vimgrep -H --column --line-number --color never ' + options.additional;
-  if (options.multiline) {
-    execString += ' -U ';
-  }
-
-  if (options.patternFilePath) {
-    debug('Writing pattern file:' + options.patternFilePath);
-    fs.writeFileSync(options.patternFilePath, options.unquotedRegex + '\n');
-  }
-
-  if (!fs.existsSync(options.patternFilePath)) {
-    debug('No pattern file found - passing regex in command');
-    execString = `${execString} -e ${options.regex}`;
-  } else {
-    execString = `${execString} -f "${options.patternFilePath}"`;
-    debug('Pattern:' + options.unquotedRegex);
-  }
-
-  execString = options.globs.reduce((command, glob) => {
-    return `${command} -g "${glob}"`;
-  }, execString);
-
-  if (options.filename) {
-    var filename = options.filename;
-    if (isWin && filename.slice(-1) === '\\') {
-      filename = filename.substr(0, filename.length - 1);
+  var args = ['--no-messages', '--vimgrep', '-H', '--column', '--line-number', '--color', 'never']
+    .concat(parseAdditional(options.additional, cwd));
+  if (options.multiline) args.push('-U');
+  var patternDirectory;
+  try {
+    if (options.patternFileDirectory) {
+      patternDirectory = fs.mkdtempSync(path.join(options.patternFileDirectory, 'todo-tree-rg-'));
+      var patternFile = path.join(patternDirectory, 'pattern');
+      fs.writeFileSync(patternFile, (options.regex || '') + '\n', { encoding: 'utf8', flag: 'wx', mode: 0o600 });
+      args.push('-f', patternFile);
+    } else {
+      args.push('-e', options.regex || '');
     }
-    execString += ' "' + filename + '"';
-  } else {
-    execString += ' .';
+    (options.globs || []).forEach(function(glob) {
+      args.push('-g', glob);
+    });
+    args.push('--', options.filename || '.');
+    debug('Command: ' + JSON.stringify([options.rgPath].concat(args)));
+    var stdout = await new Promise(function(resolve, reject) {
+      var cancelled = false;
+      var child = child_process.execFile(options.rgPath, args, {
+        cwd: cwd,
+        maxBuffer: (options.maxBuffer || 200) * 1024,
+        windowsHide: true,
+        shell: false,
+        env: Object.assign({}, process.env, { PWD: cwd }),
+      }, function(error, stdout, stderr) {
+        activeProcesses.delete(child);
+        if (cancelled) return resolve('');
+        if (error && error.code === 1 && !error.signal && !error.killed) return resolve('');
+        if (error) return reject(new RipgrepError(error.message, stderr || ''));
+        if (stderr) debug('Search stderr: ' + stderr);
+        resolve(stdout);
+      });
+      activeProcesses.set(child, function() {
+        cancelled = true;
+        child.kill('SIGINT');
+      });
+    });
+    debug('Search results:\n' + stdout);
+    return formatResults(stdout, options.multiline);
+  } finally {
+    if (patternDirectory) fs.rmSync(patternDirectory, { recursive: true, force: true });
   }
-
-  debug('Command: ' + execString);
-
-  return new Promise(function(resolve, reject) {
-    // The default for omitting maxBuffer, according to Node docs, is 200kB.
-    // We'll explicitly give that here if a custom value is not provided.
-    // Note that our options value is in KB, so we have to convert to bytes.
-    const maxBuffer = (options.maxBuffer || 200) * 1024;
-    currentProcess = child_process.exec(execString, { cwd, maxBuffer });
-    var results = '';
-
-    currentProcess.stdout.on('data', function(data) {
-      debug('Search results:\n' + data);
-      results += data;
-    });
-
-    currentProcess.stderr.on('data', function(data) {
-      debug('Search failed:\n' + data);
-      if (fs.existsSync(options.patternFilePath) === true) {
-        fs.unlinkSync(options.patternFilePath);
-      }
-      reject(new RipgrepError(data, ''));
-    });
-
-    currentProcess.on('close', function() {
-      if (fs.existsSync(options.patternFilePath) === true) {
-        fs.unlinkSync(options.patternFilePath);
-      }
-      resolve(formatResults(results, options.multiline));
-    });
-  });
 };
 
 module.exports.kill = function() {
-  if (currentProcess !== undefined) {
-    currentProcess.kill('SIGINT');
-  }
+  activeProcesses.forEach(function(cancel) {
+    cancel();
+  });
 };
 
 class Match {

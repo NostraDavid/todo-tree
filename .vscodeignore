@@ -9,3 +9,4 @@
 !resources/**
 !docs/getting-started.md
 !docs/upstream-CHANGELOG.md
+!dist/THIRD_PARTY_NOTICES.txt

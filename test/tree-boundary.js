@@ -86,7 +86,7 @@ function fixture(overrides = {}) {
     }
     return output.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
   }
-  return { provider, config, utils, attributes, vscode, values, add, uri, todos, root };
+  return { provider, config, utils, attributes, vscode, values, add, uri, todos, root, context };
 }
 
 module.exports = { fixture, root };
