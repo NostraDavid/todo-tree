@@ -399,6 +399,10 @@ class TreeNodeProvider {
     expandedNodes = _context.workspaceState.get('expandedNodes', {});
   }
 
+  dispose() {
+    this._onDidChangeTreeData.dispose();
+  }
+
   getChildren(node) {
     if (node === undefined) {
       var result = [];

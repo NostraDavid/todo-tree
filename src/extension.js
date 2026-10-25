@@ -1692,7 +1692,11 @@ function activate(context) {
       documentChanged(e.document);
     }));
 
-    context.subscriptions.push(outputChannel);
+    context.subscriptions.push(
+      new vscode.Disposable(function() {
+        if (outputChannel) outputChannel.dispose();
+      }),
+    );
 
     resetOutputChannel();
 

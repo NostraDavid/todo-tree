@@ -23,7 +23,14 @@ var debug;
 function init(context_, debug_) {
   context = context_;
   debug = debug_;
-  context.subscriptions.push(decorations);
+  context.subscriptions.push(
+    new vscode.Disposable(function() {
+      Object.values(highlightTimer).forEach(timer => clearTimeout(timer));
+      Object.values(decorations).forEach(styles => styles.forEach(style => style.dispose()));
+      highlightTimer = {};
+      decorations = {};
+    }),
+  );
 }
 
 function applyOpacity(colour, opacity) {

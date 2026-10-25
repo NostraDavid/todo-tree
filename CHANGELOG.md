@@ -6,6 +6,13 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+## [1.0.12] - 2026-10-25
+
+### Fixed
+
+- Register valid disposables for the tree provider, highlighting and optional debug output.
+- Release editor styles, highlight timers and the tree event emitter without subscription errors on shutdown. Found during the packaged VS Code smoke test.
+
 ## [1.0.11] - 2026-10-25
 
 ### Fixed
