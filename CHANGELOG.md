@@ -6,6 +6,13 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-25
+
+### Fixed
+
+- Find current VS Code bundled ripgrep on Linux, macOS and Windows, including ARM64 and unpacked installations. Based on upstream PR #924 by LazarusX.
+- Name the exact executable setting when ripgrep is missing.
+
 ### Added
 
 - Publish the existing GitHub release VSIX to Marketplace automatically, with version checks and a manual retry for existing tags.

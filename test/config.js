@@ -68,3 +68,45 @@ QUnit.test('config.ripgrepPath expands tilde and preserves executable lookup', f
     fs.rmSync(home, { recursive: true, force: true });
   }
 });
+
+QUnit.test('config.ripgrepPath finds current universal binaries on every supported host', function(assert) {
+  ['linux', 'darwin', 'win32'].forEach(function(platform) {
+    ['x64', 'arm64'].forEach(function(arch) {
+      ['node_modules', 'node_modules.asar.unpacked'].forEach(function(modules) {
+        var expected = path.join(
+          '/app',
+          modules,
+          '@vscode/ripgrep-universal/bin',
+          platform + '-' + arch,
+          platform === 'win32' ? 'rg.exe' : 'rg',
+        );
+        var configModule = { exports: {} };
+        vm.runInNewContext(fs.readFileSync(require.resolve('../src/config.js'), 'utf8'), {
+          module: configModule,
+          process: { platform: platform, arch: arch },
+          require: function(name) {
+            if (name === 'fs') {
+              return {
+                existsSync: function(file) {
+                  return file === expected;
+                },
+              };
+            }
+            if (name === 'vscode') {
+              return {
+                env: { appRoot: '/app' },
+                workspace: {
+                  getConfiguration: function() {
+                    return { ripgrep: '' };
+                  },
+                },
+              };
+            }
+            return requireConfig(name);
+          },
+        });
+        assert.strictEqual(configModule.exports.ripgrepPath(), expected, platform + '-' + arch + ' / ' + modules);
+      });
+    });
+  });
+});
