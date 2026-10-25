@@ -1,6 +1,7 @@
 {
   description = "Development tools for Todo Tree by NostraDavid";
 
+  # Nixpkgs 26.05 retains Intel macOS support.
   inputs.nixpkgs.url = "github:nixos/nixpkgs/da6dc0e7b26060f2f71ce3ef7088fb56ee44fa36";
 
   outputs =
