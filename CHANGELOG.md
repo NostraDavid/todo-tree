@@ -6,6 +6,13 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+## [1.0.7] - 2026-10-25
+
+### Fixed
+
+- Reject invalid filter regexes with a readable message while preserving the current tree and saved filter.
+- Keep the filter when cancelling input, clear it on an empty value, and recover from an invalid saved filter at startup.
+
 ## [1.0.6] - 2026-10-25
 
 ### Fixed

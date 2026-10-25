@@ -74,6 +74,14 @@ function activate(context) {
   context.workspaceState.update('buildCounter', ++buildCounter);
 
   currentFilter = context.workspaceState.get('currentFilter');
+  try {
+    new RegExp(currentFilter);
+  } catch (error) {
+    currentFilter = undefined;
+    context.workspaceState.update('currentFilter', undefined);
+    context.workspaceState.update('filtered', false);
+    vscode.window.showErrorMessage('Todo Tree: Cleared invalid saved filter regex: ' + error.message);
+  }
 
   config.init(context);
   highlights.init(context, debug);
@@ -1112,15 +1120,19 @@ function activate(context) {
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('todo-tree.filter', function() {
-      vscode.window.showInputBox({ prompt: 'Filter tree' }).then(
+      return vscode.window.showInputBox({ prompt: 'Filter tree' }).then(
         function(term) {
-          currentFilter = term;
-          if (currentFilter) {
-            context.workspaceState.update('filtered', true);
-            context.workspaceState.update('currentFilter', currentFilter);
-            provider.filter(currentFilter);
-            refreshTree();
+          if (term === undefined) return;
+          try {
+            provider.filter(term);
+          } catch (error) {
+            vscode.window.showErrorMessage('Todo Tree: Invalid filter regex: ' + error.message);
+            return;
           }
+          currentFilter = term;
+          context.workspaceState.update('filtered', Boolean(currentFilter));
+          context.workspaceState.update('currentFilter', currentFilter);
+          refreshTree();
         },
       );
     }));
