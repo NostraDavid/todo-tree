@@ -9,7 +9,7 @@ const parser = require('shell-quote').parse;
 
 function load(execFile, overrides = {}) {
   const module = { exports: {} };
-  const source = path.join(project, 'src/ripgrep.js');
+  const source = path.join(project, 'out/src/ripgrep.js');
   vm.runInNewContext(fs.readFileSync(source, 'utf8'), {
     module,
     process: {
@@ -33,7 +33,7 @@ function load(execFile, overrides = {}) {
       }
       if (name === 'fs') return { ...fs, ...overrides };
       if (name === 'shell-quote') return { parse: parser };
-      if (name === './utils') return requireProject('./src/utils.js');
+      if (name === './utils') return requireProject('./out/src/utils.js');
       return requireProject(name);
     },
   }, { filename: source });

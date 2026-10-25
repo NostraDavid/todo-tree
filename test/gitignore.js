@@ -26,13 +26,14 @@ QUnit.test('gitignore allows project paths and excludes unlisted root files', fu
     'package.nls.json',
     'package.nls.zh-cn.json',
     'webpack.config.js',
+    'tsconfig.json',
     '.github/workflows/new.yml',
     '.vscode/launch.json',
     '.vscode/tasks.json',
     'docs/new-guide.md',
     'resources/new-icon.svg',
     'scripts/new-check.mjs',
-    'src/new-feature.js',
+    'src/new-feature.ts',
     'test/new-test.js',
   ];
   var ignored = [
@@ -41,6 +42,7 @@ QUnit.test('gitignore allows project paths and excludes unlisted root files', fu
     'local-secrets/token.json',
     'node_modules/example/index.js',
     'dist/extension.js',
+    'out/src/extension.js',
     'test-files/example.js',
     'release-notes.md',
     'published-extension.json',

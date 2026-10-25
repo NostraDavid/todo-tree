@@ -1,7 +1,7 @@
 const path = require('node:path');
 const { fixture } = require('./tree-boundary');
 const { extensionClosures } = require('./extension-closures');
-const results = require('../src/searchResults');
+const results = require('../out/src/searchResults');
 
 QUnit.test('editing two documents retains one pending refresh for each', assert => {
   const f = fixture();

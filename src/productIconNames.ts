@@ -1,4 +1,4 @@
-module.exports = [
+const names: string[] = [
   'accounts-view-bar-icon',
   'breakpoints-activate',
   'breakpoints-remove-all',
@@ -212,3 +212,5 @@ module.exports = [
   'watch-view-icon',
   'widget-close',
 ];
+
+export = names;

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { performance } from 'node:perf_hooks';
-import searchResults from '../src/searchResults.js';
+import searchResults from '../out/src/searchResults.js';
 import closures from '../test/extension-closures.js';
 import boundary from '../test/tree-boundary.js';
 

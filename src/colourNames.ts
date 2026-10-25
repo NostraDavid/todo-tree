@@ -1,4 +1,4 @@
-module.exports = [
+const names: string[] = [
   'aliceblue',
   'antiquewhite',
   'aqua',
@@ -147,3 +147,5 @@ module.exports = [
   'yellow',
   'yellowgreen',
 ];
+
+export = names;

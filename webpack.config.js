@@ -4,7 +4,7 @@ const path = require('path');
 
 module.exports = {
   target: 'node16',
-  entry: './src/extension.js',
+  entry: './out/src/extension.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'extension.js',

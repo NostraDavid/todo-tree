@@ -1,4 +1,4 @@
-module.exports = [
+const names: string[] = [
   'add',
   'plus',
   'gist-new',
@@ -520,3 +520,5 @@ module.exports = [
   'search-fuzzy',
   'comment-draft',
 ];
+
+export = names;

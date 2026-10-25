@@ -176,7 +176,7 @@ function extractTag(text, matchOffset) {
       if (subTagMatch && subTagMatch.length > 1) {
         subTag = subTagMatch[1];
       }
-      rightOfTag = rightOfTagText.replace(subTagRegex, '');
+      var rightOfTag = rightOfTagText.replace(subTagRegex, '');
       if (rightOfTag.length === 0) {
         text = text.substr(0, matchOffset ? matchOffset - 1 : tagMatch.index).trim();
         after = '';
@@ -199,7 +199,7 @@ function extractTag(text, matchOffset) {
   }
   if (tagMatch === null && c.regex.trim() !== '') {
     var regex = new RegExp(c.regex, flags);
-    match = regex.exec(text);
+    var match = regex.exec(text);
     if (match !== null) {
       tagMatch = true;
       originalTag = match[0];
@@ -234,7 +234,7 @@ function updateBeforeAndAfter(result, text, matchOffset) {
     if (subTagMatch && subTagMatch.length > 1) {
       result.subTag = subTagMatch[1];
     }
-    rightOfTag = rightOfTagText.replace(subTagRegex, '');
+    var rightOfTag = rightOfTagText.replace(subTagRegex, '');
     if (rightOfTag.length === 0) {
       result.text = text.substr(0, matchOffset ? matchOffset - 1 : tagMatch.index).trim();
       result.after = '';

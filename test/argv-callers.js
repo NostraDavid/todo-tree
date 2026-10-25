@@ -1,17 +1,8 @@
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const vm = require('node:vm');
 const { fixture } = require('./tree-boundary');
-
-function sourceFunction(name, bindings) {
-  const source = fs.readFileSync(path.join(__dirname, '../src/extension.js'), 'utf8');
-  const match = source.match(new RegExp('^  function ' + name + '\\([^\\n]*\\) \\{\\n[\\s\\S]*?^  \\}', 'm'));
-  if (!match) throw new Error('Missing actual function ' + name);
-  const sandbox = vm.createContext({ ...bindings, console });
-  vm.runInContext(match[0], sandbox);
-  return sandbox;
-}
+const { extensionClosures } = require('./extension-closures');
 
 for (const usePatternFile of [false, true]) {
   QUnit.test('getOptions passes raw regex and per-search storage directory, patternFile=' + usePatternFile, assert => {
@@ -25,7 +16,7 @@ for (const usePatternFile of [false, true]) {
         'todo-tree.regex.regex': regex,
       });
       f.context.storageUri = { fsPath: storage };
-      const sandbox = sourceFunction('getOptions', {
+      const sandbox = extensionClosures(['getOptions'], {
         vscode: f.vscode,
         context: f.context,
         config: f.config,
@@ -49,7 +40,7 @@ for (const usePatternFile of [false, true]) {
 QUnit.test('stop prevents launching queued workspaces after current search settles', async assert => {
   const launched = [];
   let complete;
-  const sandbox = sourceFunction('iterateSearchList', {
+  const sandbox = extensionClosures(['iterateSearchList'], {
     searchList: ['first', 'second'],
     interrupted: false,
     search(options) {

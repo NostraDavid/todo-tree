@@ -1,10 +1,10 @@
 var os = require('os');
 var path = require('path');
 var strftime = require('fast-strftime');
-var utils = require('../src/utils.js');
-var attributes = require('../src/attributes.js');
+var utils = require('../out/src/utils.js');
+var attributes = require('../out/src/attributes.js');
 var stubs = require('./stubs.js');
-var searchResults = require('../src/searchResults.js');
+var searchResults = require('../out/src/searchResults.js');
 
 QUnit.test('utils.isHexColour', function(assert) {
   assert.ok(utils.isHexColour({}) === false);
@@ -609,4 +609,15 @@ QUnit.test('searchResults can be cleared', function(assert) {
   assert.equal(searchResults.count(), 2);
   searchResults.clear();
   assert.equal(searchResults.count(), 0);
+});
+
+QUnit.test('tag parsing keeps its intermediate values out of process globals', function(assert) {
+  var config = stubs.getTestConfig();
+  utils.init(config);
+  var extracted = utils.extractTag('before TODO after');
+  utils.updateBeforeAndAfter(extracted, 'TODO after');
+  config.regexSource = '(TODO)';
+  utils.extractTag('TODO after');
+  assert.notOk(Object.hasOwn(globalThis, 'rightOfTag'));
+  assert.notOk(Object.hasOwn(globalThis, 'match'));
 });

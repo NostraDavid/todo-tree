@@ -30,7 +30,7 @@ function watcher() {
   const sandbox = extensionClosures(['triggerRescan', 'resetGitWatcher', 'deactivate'], {
     vscode: f.vscode,
     provider: f.provider,
-    ripgrep: createRequire(path.join(root, 'package.json'))('./src/ripgrep.js'),
+    ripgrep: createRequire(path.join(root, 'package.json'))('./out/src/ripgrep.js'),
     child_process: { exec: start, execFile: start },
     autoGitRefreshTimer: undefined,
     periodicRefreshTimer: undefined,

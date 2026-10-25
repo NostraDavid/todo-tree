@@ -47,7 +47,7 @@ function fixture(overrides = {}) {
   };
   const cache = new Map();
   function load(filename) {
-    const absolute = path.join(root, 'src', filename);
+    const absolute = path.join(root, 'out/src', filename);
     if (cache.has(absolute)) return cache.get(absolute).exports;
     const module = { exports: {} };
     cache.set(absolute, module);

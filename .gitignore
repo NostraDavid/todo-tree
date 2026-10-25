@@ -33,6 +33,7 @@
 !/package.nls.json
 !/package.nls.zh-cn.json
 !/webpack.config.js
+!/tsconfig.json
 
 # Keep local editor settings and generated files out of allowed directories.
 /.vscode/*
@@ -40,5 +41,6 @@
 !/.vscode/tasks.json
 node_modules/
 dist/
+out/
 .direnv/
 *.vsix

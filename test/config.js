@@ -2,7 +2,7 @@ var fs = require('fs');
 var os = require('os');
 var path = require('path');
 var vm = require('vm');
-var requireConfig = require('module').createRequire(require.resolve('../src/config.js'));
+var requireConfig = require('module').createRequire(require.resolve('../out/src/config.js'));
 
 QUnit.test('config.ripgrepPath expands tilde and preserves executable lookup', function(assert) {
   var home = fs.mkdtempSync(path.join(os.tmpdir(), 'todo-tree home $-'));
@@ -18,7 +18,7 @@ QUnit.test('config.ripgrepPath expands tilde and preserves executable lookup', f
     },
   };
   var configModule = { exports: {} };
-  vm.runInNewContext(fs.readFileSync(require.resolve('../src/config.js'), 'utf8'), {
+  vm.runInNewContext(fs.readFileSync(require.resolve('../out/src/config.js'), 'utf8'), {
     module: configModule,
     process: process,
     require: function(name) {
@@ -81,7 +81,7 @@ QUnit.test('config.ripgrepPath finds current universal binaries on every support
           platform === 'win32' ? 'rg.exe' : 'rg',
         );
         var configModule = { exports: {} };
-        vm.runInNewContext(fs.readFileSync(require.resolve('../src/config.js'), 'utf8'), {
+        vm.runInNewContext(fs.readFileSync(require.resolve('../out/src/config.js'), 'utf8'), {
           module: configModule,
           process: { platform: platform, arch: arch },
           require: function(name) {

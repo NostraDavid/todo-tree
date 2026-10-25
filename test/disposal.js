@@ -56,7 +56,7 @@ QUnit.test('highlight subscription disposes styles and cancels pending updates',
   const pending = new Map();
   let next = 0;
   const module = { exports: {} };
-  vm.runInNewContext(fs.readFileSync(path.join(root, 'src/highlights.js'), 'utf8'), {
+  vm.runInNewContext(fs.readFileSync(path.join(root, 'out/src/highlights.js'), 'utf8'), {
     module,
     require(name) {
       return name === 'vscode'
@@ -125,9 +125,9 @@ for (const debug of [false, true]) {
       vscode: f.vscode,
       outputChannel: undefined,
     });
-    const source = fs.readFileSync(path.join(root, 'src/extension.js'), 'utf8');
+    const source = fs.readFileSync(path.join(root, 'out/src/extension.js'), 'utf8');
     const registration = source.match(
-      /    context\.subscriptions\.push\(\s*(?:outputChannel|new vscode\.Disposable\([\s\S]*?\))\s*,?\s*\);\n\n    resetOutputChannel\(\);/,
+      / +context\.subscriptions\.push\(\s*(?:outputChannel|new vscode\.Disposable\([\s\S]*?\))\s*,?\s*\);\s*resetOutputChannel\(\);/,
     );
     assert.ok(registration, 'actual output channel registration');
     vm.runInContext(registration[0], sandbox);

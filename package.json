@@ -1,7 +1,7 @@
 {
   "name": "nostradavid-todo-tree",
   "displayName": "Todo Tree by NostraDavid",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "Find TODO and FIXME comments with ripgrep. A maintained Todo Tree fork by NostraDavid.",
   "categories": [
     "Other"
@@ -25,12 +25,14 @@
   "publisher": "nostradavid",
   "main": "./dist/extension",
   "scripts": {
-    "test": "qunit",
-    "build": "webpack --mode production && node scripts/third-party-notices.mjs",
+    "test": "npm run compile && qunit",
+    "build": "npm run compile && webpack --mode production && node scripts/third-party-notices.mjs",
     "watch": "webpack --mode development --watch",
     "vscode:prepublish": "npm run build",
     "package": "vsce package --no-dependencies --githubBranch master",
-    "release:check": "node scripts/release-notes.mjs"
+    "release:check": "node scripts/release-notes.mjs",
+    "compile": "tsc",
+    "type-check": "tsc --noEmit"
   },
   "contributes": {
     "viewsContainers": {
@@ -1206,9 +1208,13 @@
     "treeify": "^1.1.0"
   },
   "devDependencies": {
+    "@types/node": "24.19.2",
+    "@types/qunit": "2.19.14",
+    "@types/vscode": "1.72.0",
     "@vscode/vsce": "4.0.0",
     "parse-code-context": "1.0.0",
     "qunit": "2.26.0",
+    "typescript": "5.9.3",
     "webpack": "5.112.2",
     "webpack-cli": "7.2.3"
   },

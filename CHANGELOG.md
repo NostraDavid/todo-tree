@@ -6,6 +6,15 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+## [1.0.13] - 2026-10-25
+
+### Changed
+
+- Add a strict TypeScript compiler step and migrate the four static name catalogs.
+- Keep tag-extraction temporaries local instead of leaking them into the shared process.
+- Run the existing behavior tests against emitted runtime code before bundling the extension.
+- Keep the remaining JavaScript modules temporarily supported while they migrate in following independent steps.
+
 ## [1.0.12] - 2026-10-25
 
 ### Fixed

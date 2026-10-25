@@ -1,4 +1,4 @@
-module.exports = [
+const names: string[] = [
   'activityBar.activeBorder',
   'activityBar.background',
   'activityBar.border',
@@ -388,3 +388,5 @@ module.exports = [
   'tree.indentGuidesStroke',
   'widget.shadow',
 ];
+
+export = names;

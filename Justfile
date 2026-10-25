@@ -28,7 +28,7 @@ watch:
     npm run watch
 
 [group('quality')]
-check: format-check lint test build release-check audit
+check: format-check lint type-check test build release-check audit
 
 [group('quality')]
 format:
@@ -48,6 +48,10 @@ lint:
     statix check flake.nix
     deadnix --fail flake.nix
     actionlint
+
+[group('quality')]
+type-check:
+    npm run type-check
 
 [group('quality')]
 test:

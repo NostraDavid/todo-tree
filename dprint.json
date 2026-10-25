@@ -1,10 +1,21 @@
 {
   "indentWidth": 2,
   "newLineKind": "lf",
-  "typescript": { "quoteStyle": "preferSingle" },
-  "markdown": { "textWrap": "maintain" },
-  "includes": ["**/*.{js,mjs,json,jsonc,md,yaml,yml}"],
-  "excludes": ["node_modules/**", "dist/**", "package-lock.json"],
+  "typescript": {
+    "quoteStyle": "preferSingle"
+  },
+  "markdown": {
+    "textWrap": "maintain"
+  },
+  "includes": [
+    "**/*.{js,mjs,ts,mts,json,jsonc,md,yaml,yml}"
+  ],
+  "excludes": [
+    "node_modules/**",
+    "dist/**",
+    "package-lock.json",
+    "out/**"
+  ],
   "plugins": [
     "https://plugins.dprint.dev/typescript-0.96.1.wasm",
     "https://plugins.dprint.dev/json-0.24.0.wasm",
