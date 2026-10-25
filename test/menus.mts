@@ -1,6 +1,7 @@
-const manifest = require('../package.json');
-const vm = require('node:vm');
-const menu = manifest.contributes.menus['view/item/context'].find(item => item.command === 'todo-tree.showTreeView');
+import vm from 'node:vm';
+import QUnit from 'qunit';
+import manifest from '../package.json' with { type: 'json' };
+const menu = manifest.contributes.menus['view/item/context'].find(item => item.command === 'todo-tree.showTreeView')!;
 
 for (const view of ['todo-tree-view', 'other-extension-view']) {
   for (const [flat, tagsOnly] of [[false, false], [true, false], [false, true], [true, true]]) {

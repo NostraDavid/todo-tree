@@ -1,11 +1,11 @@
-const { fixture } = require('./tree-boundary');
-
+import QUnit from 'qunit';
+import { fixture } from './tree-boundary.mts';
 for (
   const [mode, settings] of [
     ['tree', {}],
     ['flat', { 'todo-tree.tree.flat': true }],
     ['tags only', { 'todo-tree.tree.tagsOnly': true }],
-  ]
+  ] satisfies [string, Record<string, unknown>][]
 ) {
   for (const grouped of [false, true]) {
     QUnit.test(`${mode}, grouped=${grouped}: refreshing A preserves B`, assert => {

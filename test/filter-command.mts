@@ -1,6 +1,9 @@
-const { fixture } = require('./tree-boundary');
-const { registeredCommand } = require('./extension-closures');
-
+import QUnit from 'qunit';
+import type { InputBoxOptions } from 'vscode';
+import type { TestHandler } from './boundary-types.mts';
+import { registeredCommand } from './extension-closures.mts';
+import { restoreFilter } from './extension-closures.mts';
+import { fixture } from './tree-boundary.mts';
 for (const term of ['(', undefined, 'banana', '']) {
   QUnit.test(`filter command commits only accepted input, term=${JSON.stringify(term)}`, async assert => {
     const f = fixture();
@@ -10,23 +13,23 @@ for (const term of ['(', undefined, 'banana', '']) {
     f.context.workspaceState.update('currentFilter', 'apple');
     f.context.workspaceState.update('filtered', true);
     const before = f.todos();
-    const errors = [];
-    let handler;
+    const errors: string[] = [];
+    let handler!: TestHandler;
     let escapedError;
-    let inputOptions;
+    let inputOptions!: InputBoxOptions;
     const vscode = {
       commands: {
-        registerCommand(name, callback) {
+        registerCommand(_name: string, callback: TestHandler) {
           handler = callback;
           return { dispose() {} };
         },
       },
       window: {
-        showInputBox(options) {
+        showInputBox(options: InputBoxOptions) {
           inputOptions = options;
           return Promise.resolve(term);
         },
-        showErrorMessage(message) {
+        showErrorMessage(message: string) {
           errors.push(message);
         },
       },
@@ -69,16 +72,15 @@ for (const term of ['(', undefined, 'banana', '']) {
 
 for (const term of ['(', 'banana', undefined]) {
   QUnit.test('saved filter is validated before any search, term=' + JSON.stringify(term), assert => {
-    const { restoreFilter } = require('./extension-closures');
     const f = fixture();
     f.context.workspaceState.update('currentFilter', term);
     f.context.workspaceState.update('filtered', Boolean(term));
-    const errors = [];
+    const errors: string[] = [];
     const sandbox = restoreFilter({
       context: f.context,
       vscode: {
         window: {
-          showErrorMessage(message) {
+          showErrorMessage(message: string) {
             errors.push(message);
           },
         },

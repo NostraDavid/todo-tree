@@ -1,6 +1,6 @@
-const { fixture } = require('./tree-boundary');
-const { extensionClosures } = require('./extension-closures');
-
+import QUnit from 'qunit';
+import { extensionClosures } from './extension-closures.mts';
+import { fixture } from './tree-boundary.mts';
 for (const groupAlsoTag of [false, true]) {
   for (const mode of ['tags', 'current file', 'top three', 'total']) {
     QUnit.test(`status labels include groups once, mode=${mode}, groupAlsoTag=${groupAlsoTag}`, assert => {
@@ -19,7 +19,7 @@ for (const groupAlsoTag of [false, true]) {
         'real provider counts use group labels',
       );
       f.vscode.window = { activeTextEditor: { document: { fileName: f.uri('a.js').fsPath } } };
-      const indicator = { show() {}, hide() {} };
+      const indicator = { text: '', show() {}, hide() {} };
       const sandbox = extensionClosures(['updateInformation'], {
         vscode: f.vscode,
         provider: f.provider,
@@ -48,7 +48,7 @@ for (const mode of ['tags', 'current file', 'top three', 'total']) {
   QUnit.test('status with no results remains zero, mode=' + mode, assert => {
     const f = fixture({ 'todo-tree.general.statusBar': mode, 'todo-tree.general.tagGroups': { work: ['TODO'] } });
     f.vscode.window = {};
-    const indicator = { show() {}, hide() {} };
+    const indicator = { text: '', show() {}, hide() {} };
     const sandbox = extensionClosures(['updateInformation'], {
       vscode: f.vscode,
       provider: f.provider,

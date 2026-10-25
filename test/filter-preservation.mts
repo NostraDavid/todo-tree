@@ -1,5 +1,5 @@
-const { fixture } = require('./tree-boundary');
-
+import QUnit from 'qunit';
+import { fixture } from './tree-boundary.mts';
 QUnit.test('a rejected regex does not partially change the visible tree', assert => {
   const f = fixture();
   f.add('a.js', 'TODO apple');

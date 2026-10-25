@@ -8,11 +8,14 @@ You do not need an Azure account or Marketplace credentials to develop or packag
 Install [Git](https://git-scm.com/downloads), then clone the repository:
 
 ```bash
-git clone https://github.com/NostraDavid/todo-tree.git
-cd todo-tree
+git clone https://github.com/NostraDavid/vscode-todo-tree.git
+cd vscode-todo-tree
 ```
 
-The `src` directory contains the extension code. The `test` directory contains QUnit tests.
+The `src` directory contains strict TypeScript runtime code.
+The compiler emits CommonJS JavaScript into ignored `out/src`; Webpack bundles that output into `dist`.
+Node.js 24 runs the development `.mts` files directly, and `just type-check` validates their types.
+See [the migration record](docs/typescript-migration.md) for the individual steps. The `test` directory contains QUnit tests.
 `package.json` defines the extension identity, settings, and build commands.
 
 ## Enter the development environment
@@ -47,7 +50,8 @@ A separate **Extension Development Host** window opens with this checkout loaded
 Disable any installed copy of the original Todo Tree or this fork in that test window to avoid duplicate commands.
 Open a folder, add a `// TODO:` comment, and check the Todo Tree view.
 
-For repeated edits, run `just watch` in a terminal.
+For repeated edits, run `just watch` in one terminal and `just watch-bundle` in another.
+The first command compiles TypeScript; the second bundles each compiler update.
 After the bundle rebuilds, use **Developer: Reload Window** in the Extension Development Host.
 
 ## Change one behavior

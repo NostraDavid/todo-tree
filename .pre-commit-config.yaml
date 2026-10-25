@@ -10,7 +10,7 @@ repos:
         pass_filenames: false
         always_run: true
       - id: lint
-        name: Lint JavaScript, Nix, and workflows
+        name: Lint TypeScript, Nix, and workflows
         entry: just lint
         language: system
         pass_filenames: false

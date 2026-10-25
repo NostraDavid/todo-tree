@@ -22,10 +22,15 @@ hooks:
 [group('development')]
 setup: sync hooks
 
-# Rebuild the development bundle when JavaScript changes.
+# Compile TypeScript after each edit; run watch-bundle in a second terminal.
 [group('development')]
 watch:
     npm run watch
+
+# Rebuild the development bundle when compiler output changes.
+[group('development')]
+watch-bundle:
+    npm run watch:bundle
 
 [group('quality')]
 check: format-check lint type-check test build release-check audit
@@ -44,7 +49,7 @@ format-check:
 
 [group('quality')]
 lint:
-    oxlint --deny-warnings src test scripts webpack.config.js
+    oxlint --deny-warnings src test scripts webpack.config.mts
     statix check flake.nix
     deadnix --fail flake.nix
     actionlint
@@ -68,7 +73,7 @@ build:
 # Validate the version and print its changelog entry as release notes.
 [group('release')]
 release-check:
-    node scripts/release-notes.mjs
+    node scripts/release-notes.mts
 
 # Build an installable VSIX without publishing it.
 [group('release')]

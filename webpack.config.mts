@@ -1,12 +1,11 @@
-'use strict';
+import path from 'node:path';
+import type { Configuration } from 'webpack';
 
-const path = require('path');
-
-module.exports = {
+const configuration: Configuration = {
   target: 'node16',
   entry: './out/src/extension.js',
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(import.meta.dirname, 'dist'),
     filename: 'extension.js',
     library: { type: 'commonjs2' },
     clean: true,
@@ -14,3 +13,4 @@ module.exports = {
   devtool: 'source-map',
   externals: { vscode: 'commonjs vscode' },
 };
+export default configuration;

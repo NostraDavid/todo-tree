@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { performance } from 'node:perf_hooks';
 import searchResults from '../out/src/searchResults.js';
-import closures from '../test/extension-closures.js';
-import boundary from '../test/tree-boundary.js';
+import * as closures from '../test/extension-closures.mts';
+import * as boundary from '../test/tree-boundary.mts';
 
 const fixture = boundary.fixture();
 const measurements = [];
@@ -15,8 +15,8 @@ for (const spacing of [100, 1]) {
     uri,
     fileName: uri.fsPath,
     getText: () => text,
-    positionAt: offset => ({ line: Math.floor(offset / row.length), character: offset % row.length }),
-    lineAt: line => ({ text: text.slice(line * row.length, (line + 1) * row.length - 1) }),
+    positionAt: (offset: number) => ({ line: Math.floor(offset / row.length), character: offset % row.length }),
+    lineAt: (line: number) => ({ text: text.slice(line * row.length, (line + 1) * row.length - 1) }),
   };
   const extension = closures.extensionClosures(['refreshFile'], {
     config: fixture.config,

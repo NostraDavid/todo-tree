@@ -1,8 +1,8 @@
-var path = require('path');
-var spawnSync = require('child_process').spawnSync;
-
+import { spawnSync } from 'node:child_process';
+import path from 'node:path';
+import QUnit from 'qunit';
 QUnit.test('gitignore allows project paths and excludes unlisted root files', function(assert) {
-  var root = path.join(__dirname, '..');
+  var root = path.join(import.meta.dirname, '..');
   var allowed = [
     '.gitignore',
     '.editorconfig',
@@ -25,16 +25,17 @@ QUnit.test('gitignore allows project paths and excludes unlisted root files', fu
     'package-lock.json',
     'package.nls.json',
     'package.nls.zh-cn.json',
-    'webpack.config.js',
+    'webpack.config.mts',
     'tsconfig.json',
+    'tsconfig.tools.json',
     '.github/workflows/new.yml',
     '.vscode/launch.json',
     '.vscode/tasks.json',
     'docs/new-guide.md',
     'resources/new-icon.svg',
-    'scripts/new-check.mjs',
+    'scripts/new-check.mts',
     'src/new-feature.ts',
-    'test/new-test.js',
+    'test/new-test.mts',
   ];
   var ignored = [
     'scratch.txt',

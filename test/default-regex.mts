@@ -1,6 +1,6 @@
-const { fixture } = require('./tree-boundary');
-
-function matches(f, text) {
+import QUnit from 'qunit';
+import { fixture } from './tree-boundary.mts';
+function matches(f: ReturnType<typeof fixture>, text: string) {
   return [...text.matchAll(f.utils.getRegexForEditorSearch(true))].map(match => ({
     text: match[0],
     line: text.slice(0, match.index).split('\n').length,

@@ -1,0 +1,28 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "noUnusedLocals": true,
+    "noImplicitReturns": true,
+    "types": [
+      "node",
+      "vscode"
+    ]
+  },
+  "include": [
+    "test/**/*.mts",
+    "scripts/**/*.mts",
+    "webpack.config.mts",
+    "src/dependencies.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "out",
+    "dist"
+  ]
+}

@@ -6,6 +6,13 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+## [1.0.18] - 2026-10-25
+
+### Changed
+
+- Convert the complete regression suite, test boundaries, maintenance scripts and Webpack configuration to strict TypeScript.
+- Run development files natively with Node 24 while continuing to ship only bundled JavaScript to VS Code.
+
 ## [1.0.17] - 2026-10-25
 
 ### Changed

@@ -1,18 +1,24 @@
-const { createRequire } = require('node:module');
-const path = require('node:path');
-const { fixture, root } = require('./tree-boundary');
-const { extensionClosures } = require('./extension-closures');
-
+import { createRequire } from 'node:module';
+import path from 'node:path';
+import QUnit from 'qunit';
+import { extensionClosures } from './extension-closures.mts';
+import { fixture, root } from './tree-boundary.mts';
+type GitCallback = (error: Error | null, stdout?: string) => void;
+interface GitChild {
+  cwd: string;
+  callback: GitCallback;
+  killed: boolean;
+  kill(): void;
+  on(): GitChild;
+}
 function watcher() {
   const f = fixture({ 'todo-tree.general.automaticGitRefreshInterval': 1 });
   f.vscode.workspace.workspaceFolders = [{ uri: f.uri('a') }, { uri: f.uri('b') }];
-  const intervals = new Map();
-  const timeouts = new Map();
-  const processes = [];
+  const intervals = new Map<number, { callback: () => void; ms: number }>();
+  const timeouts = new Map<number, { callback: () => void; ms: number }>();
+  const processes: GitChild[] = [];
   let nextTimer = 1;
-  const start = (...args) => {
-    const options = args.find(value => value && typeof value === 'object' && !Array.isArray(value));
-    const callback = args.findLast(value => typeof value === 'function');
+  const start = (_executable: string, _args: string[], options: { cwd: string }, callback: GitCallback) => {
     const child = {
       cwd: options.cwd,
       callback,
@@ -38,20 +44,20 @@ function watcher() {
     hideTimeout: undefined,
     lastGitHead: {},
     debug() {},
-    setInterval(callback, ms) {
+    setInterval(callback: () => void, ms: number) {
       const id = nextTimer++;
       intervals.set(id, { callback, ms });
       return id;
     },
-    clearInterval(id) {
+    clearInterval(id: number) {
       intervals.delete(id);
     },
-    setTimeout(callback, ms) {
+    setTimeout(callback: () => void, ms: number) {
       const id = nextTimer++;
       timeouts.set(id, { callback, ms });
       return id;
     },
-    clearTimeout(id) {
+    clearTimeout(id: number) {
       timeouts.delete(id);
     },
   });
@@ -77,7 +83,7 @@ QUnit.test('Git polling does not overlap and releases each root independently', 
   w.processes[0].callback(null, 'abc\n');
   w.tick();
   assert.strictEqual(w.processes.length, 3, 'finished A can poll again while B remains busy');
-  assert.strictEqual(w.processes.at(-1).cwd, w.f.uri('a').fsPath);
+  assert.strictEqual(w.processes.at(-1)!.cwd, w.f.uri('a').fsPath);
 });
 
 QUnit.test('Git polling resets interval, disables at zero, and ignores unavailable stdout', assert => {

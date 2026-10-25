@@ -62,7 +62,7 @@ De controles gebruiken VS Code 1.143.1 op Linux, met geïsoleerde gebruikers- en
 
 ## Metingen
 
-`node scripts/benchmark-search.mjs` meet de echte `refreshFile` en resultatenopslag met vaste editorcoördinaten en een gestubde boomupdate. Dit is een synthetische functiebenchmark, geen meting van de volledige editorinterface.
+`node scripts/benchmark-search.mts` meet de echte `refreshFile` en resultatenopslag met vaste editorcoördinaten en een gestubde boomupdate. Dit is een synthetische functiebenchmark, geen meting van de volledige editorinterface.
 
 | 50.000 regels |    Voor 1.0.11 |   Na 1.0.11 |
 | ------------- | -------------: | ----------: |

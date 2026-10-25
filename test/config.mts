@@ -1,13 +1,16 @@
-var fs = require('fs');
-var os = require('os');
-var path = require('path');
-var vm = require('vm');
-var requireConfig = require('module').createRequire(require.resolve('../out/src/config.js'));
+import fs from 'node:fs';
+import { createRequire } from 'node:module';
+import os from 'node:os';
+import path from 'node:path';
+import vm from 'node:vm';
+import QUnit from 'qunit';
+import { fixture } from './tree-boundary.mts';
+const requireConfig = createRequire(new URL('../out/src/config.js', import.meta.url));
 
 QUnit.test('config.ripgrepPath expands tilde and preserves executable lookup', function(assert) {
   var home = fs.mkdtempSync(path.join(os.tmpdir(), 'todo-tree home $-'));
   var homedir = os.homedir;
-  var configuredPath = '~/.local/bin/rg';
+  var configuredPath: string | undefined = '~/.local/bin/rg';
   var rgPath = path.join(home, '.local/bin/rg');
   var vscode = {
     env: { appRoot: home },
@@ -17,12 +20,12 @@ QUnit.test('config.ripgrepPath expands tilde and preserves executable lookup', f
       },
     },
   };
-  var configModule = { exports: {} };
-  vm.runInNewContext(fs.readFileSync(require.resolve('../out/src/config.js'), 'utf8'), {
+  var configModule = { exports: {} as typeof import('../out/src/config.js') };
+  vm.runInNewContext(fs.readFileSync(requireConfig.resolve('./config.js'), 'utf8'), {
     module: configModule,
     exports: configModule.exports,
     process: process,
-    require: function(name) {
+    require: function(name: string) {
       return name === 'vscode' ? vscode : requireConfig(name);
     },
   });
@@ -81,15 +84,15 @@ QUnit.test('config.ripgrepPath finds current universal binaries on every support
           platform + '-' + arch,
           platform === 'win32' ? 'rg.exe' : 'rg',
         );
-        var configModule = { exports: {} };
-        vm.runInNewContext(fs.readFileSync(require.resolve('../out/src/config.js'), 'utf8'), {
+        var configModule = { exports: {} as typeof import('../out/src/config.js') };
+        vm.runInNewContext(fs.readFileSync(requireConfig.resolve('./config.js'), 'utf8'), {
           module: configModule,
           exports: configModule.exports,
           process: { platform: platform, arch: arch },
-          require: function(name) {
+          require: function(name: string) {
             if (name === 'fs') {
               return {
-                existsSync: function(file) {
+                existsSync: function(file: fs.PathLike) {
                   return file === expected;
                 },
               };
@@ -114,7 +117,6 @@ QUnit.test('config.ripgrepPath finds current universal binaries on every support
 });
 
 QUnit.test('built-in excludes distinguish all four configured modes', function(assert) {
-  var fixture = require('./tree-boundary').fixture;
   for (
     var choice of [
       ['none', false, false],

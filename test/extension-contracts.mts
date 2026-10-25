@@ -1,8 +1,10 @@
-const fs = require('node:fs');
-const path = require('node:path');
-const { fixture } = require('./tree-boundary');
-const { extensionClosures, registeredCommand } = require('./extension-closures');
-
+import fs from 'node:fs';
+import path from 'node:path';
+import QUnit from 'qunit';
+import type { RipgrepOptions } from '../out/src/types.js';
+import { Selection, type TestHandler } from './boundary-types.mts';
+import { extensionClosures, registeredCommand } from './extension-closures.mts';
+import { fixture } from './tree-boundary.mts';
 QUnit.test('search options work without workspace storage', assert => {
   const f = fixture({ 'todo-tree.ripgrep.ripgrep': process.execPath, 'todo-tree.filtering.passGlobsToRipgrep': false });
   const sandbox = extensionClosures(['getOptions'], {
@@ -15,7 +17,7 @@ QUnit.test('search options work without workspace storage', assert => {
     outputChannel: undefined,
     debug() {},
   });
-  let options;
+  let options: RipgrepOptions | undefined;
   let error;
   try {
     options = sandbox.getOptions('a.js');
@@ -37,10 +39,10 @@ QUnit.test('workspace-relative roots produce no work when no workspace exists', 
 
 for (const command of ['todo-tree.goToNext', 'todo-tree.goToPrevious']) {
   QUnit.test('navigation without an active editor is a no-op: ' + command, assert => {
-    let handler;
+    let handler!: TestHandler;
     const vscode = {
       commands: {
-        registerCommand(_name, callback) {
+        registerCommand(_name: string, callback: TestHandler) {
           handler = callback;
           return { dispose() {} };
         },
@@ -65,17 +67,17 @@ QUnit.test('previous navigation selects a real match without leaking a global re
     document: {
       getText: () => text,
       offsetAt: () => text.length,
-      positionAt: offset => ({
+      positionAt: (offset: number) => ({
         line: text.slice(0, offset).split('\n').length - 1,
         character: offset - (text.lastIndexOf('\n', offset) + 1),
       }),
     },
-    selections: [{ start: { line: 1, character: 14 } }],
+    selections: [new Selection({ line: 1, character: 14 }, { line: 1, character: 14 })],
     revealRange() {},
   };
-  let handler;
+  let handler!: TestHandler;
   f.vscode.commands = {
-    registerCommand(_name, callback) {
+    registerCommand(_name: string, callback: TestHandler) {
       handler = callback;
       return { dispose() {} };
     },
@@ -93,16 +95,16 @@ QUnit.test('previous navigation selects a real match without leaking a global re
 });
 
 QUnit.test('cache cleanup handles absent folders and directory-read errors', assert => {
-  const logs = [];
+  const logs: string[] = [];
   let reads = 0;
   const sandbox = extensionClosures(['purgeFolder'], {
     fs: {
-      readdir(_folder, callback) {
+      readdir(_folder: string, callback: (error: Error, files: undefined) => void) {
         reads++;
         callback(new Error('ENOENT fixture'), undefined);
       },
     },
-    debug: message => logs.push(message),
+    debug: (message: string) => logs.push(message),
   });
   let error;
   try {

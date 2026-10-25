@@ -1,8 +1,8 @@
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
-const { fake, load, options } = require('./argv-boundary');
-
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import QUnit from 'qunit';
+import { fake, load, options } from './argv-boundary.mts';
 for (
   const [source, expected] of [
     ['--label "a b"', ['--label', 'a b']],
@@ -120,7 +120,10 @@ QUnit.test('exit one means no matches; code two never returns partial results', 
   f.calls[0].callback(Object.assign(new Error('exit 1'), { code: 1 }), '', '');
   assert.deepEqual(Array.from(await absent), []);
   const failed = f.search.search(os.tmpdir(), options());
-  const rejection = assert.rejects(failed, error => error.message === 'exit 2' && error.stderr === 'bad input');
+  const rejection = assert.rejects(
+    failed,
+    (error: Error & { stderr?: string }) => error.message === 'exit 2' && error.stderr === 'bad input',
+  );
   f.calls[1].callback(Object.assign(new Error('exit 2'), { code: 2 }), 'file:1:1:TODO partial\n', 'bad input');
   await rejection;
 });
@@ -136,7 +139,7 @@ for (
   QUnit.test('process failure stays a failure: ' + failure.code + '/' + failure.message, async assert => {
     const f = fake();
     const promise = f.search.search(os.tmpdir(), options());
-    const rejected = assert.rejects(promise, error => error.message === failure.message);
+    const rejected = assert.rejects(promise, (error: Error & { stderr?: string }) => error.message === failure.message);
     f.calls[0].callback(Object.assign(new Error(failure.message), failure), '', 'diagnostic');
     await rejected;
   });
@@ -150,7 +153,7 @@ QUnit.test('overlapping searches own different pattern files and cleanup only th
     const f = fake();
     const first = f.search.search(os.tmpdir(), options({ regex: 'TODO first', patternFileDirectory: directory }));
     const second = f.search.search(os.tmpdir(), options({ regex: 'TODO second', patternFileDirectory: directory }));
-    const pattern = call => call.args[call.args.indexOf('-f') + 1];
+    const pattern = (call: import('./argv-boundary.mts').SearchCall) => call.args[call.args.indexOf('-f') + 1];
     const firstPath = pattern(f.calls[0]);
     const secondPath = pattern(f.calls[1]);
     assert.notEqual(firstPath, secondPath, 'same storage directory creates independent files');

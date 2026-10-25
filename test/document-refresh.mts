@@ -1,12 +1,13 @@
-const path = require('node:path');
-const { fixture } = require('./tree-boundary');
-const { extensionClosures } = require('./extension-closures');
-const results = require('../out/src/searchResults');
-
+import path from 'node:path';
+import QUnit from 'qunit';
+import * as results from '../out/src/searchResults.js';
+import type { SearchMatch } from '../out/src/types.js';
+import { extensionClosures } from './extension-closures.mts';
+import { fixture } from './tree-boundary.mts';
 QUnit.test('editing two documents retains one pending refresh for each', assert => {
   const f = fixture();
-  const pending = new Map();
-  const refreshed = [];
+  const pending = new Map<number, () => void>();
+  const refreshed: string[] = [];
   let next = 0;
   f.vscode.window = { visibleTextEditors: [] };
   const sandbox = extensionClosures(['documentChanged', 'deactivate'], {
@@ -18,13 +19,13 @@ QUnit.test('editing two documents retains one pending refresh for each', assert 
     ripgrep: { kill() {} },
     provider: { clear() {} },
     clearInterval() {},
-    refreshFile: document => refreshed.push(document.fileName),
-    setTimeout(callback, _ms, ...args) {
+    refreshFile: (document: { fileName: string }) => refreshed.push(document.fileName),
+    setTimeout(callback: (...args: unknown[]) => void, _ms: number, ...args: unknown[]) {
       const id = ++next;
       pending.set(id, () => callback(...args));
       return id;
     },
-    clearTimeout(id) {
+    clearTimeout(id: number) {
       pending.delete(id);
     },
   });
@@ -48,7 +49,7 @@ for (
   const [name, text, regex, expected] of [
     ['dense file', '// TODO task\n'.repeat(5000), undefined, 5000],
     ['custom matches with repeated normalized positions', 'a\nb', '[\\s\\S]', 2],
-  ]
+  ] satisfies [string, string, string | undefined, number][]
 ) {
   QUnit.test('file refresh replaces own matches and preserves other files: ' + name, assert => {
     const f = fixture(regex ? { 'todo-tree.regex.regex': regex } : {});
@@ -58,11 +59,11 @@ for (
       uri,
       fileName: uri.fsPath,
       getText: () => text,
-      positionAt(offset) {
+      positionAt(offset: number) {
         const rows = text.slice(0, offset).split('\n');
-        return { line: rows.length - 1, character: rows.at(-1).length };
+        return { line: rows.length - 1, character: rows.at(-1)!.length };
       },
-      lineAt: line => ({ text: lines[line] }),
+      lineAt: (line: number) => ({ text: lines[line] }),
     };
     const sandbox = extensionClosures(['refreshFile'], {
       config: f.config,
@@ -79,7 +80,7 @@ for (
     assert.strictEqual(results.count(), expected + 1);
     sandbox.refreshFile(document);
     assert.strictEqual(results.count(), expected + 1, 'refresh replaces previous A results');
-    const matches = [];
+    const matches: SearchMatch[] = [];
     results.addToTree({ add: result => matches.push(result) });
     assert.strictEqual(matches.filter(result => result.uri === uri).length, expected);
     results.clear();

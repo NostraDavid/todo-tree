@@ -1,9 +1,9 @@
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
-const { fixture } = require('./tree-boundary');
-const { extensionClosures } = require('./extension-closures');
-
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import QUnit from 'qunit';
+import { extensionClosures } from './extension-closures.mts';
+import { fixture } from './tree-boundary.mts';
 for (const usePatternFile of [false, true]) {
   QUnit.test('getOptions passes raw regex and per-search storage directory, patternFile=' + usePatternFile, assert => {
     const storage = fs.mkdtempSync(path.join(os.tmpdir(), 'todo-options-'));
@@ -38,18 +38,18 @@ for (const usePatternFile of [false, true]) {
 }
 
 QUnit.test('stop prevents launching queued workspaces after current search settles', async assert => {
-  const launched = [];
-  let complete;
+  const launched: string[] = [];
+  let complete!: () => void;
   const sandbox = extensionClosures(['iterateSearchList'], {
     searchList: ['first', 'second'],
     interrupted: false,
-    search(options) {
+    search(options: string) {
       launched.push(options);
-      return new Promise(resolve => {
+      return new Promise<void>(resolve => {
         complete = resolve;
       });
     },
-    getOptions(filename) {
+    getOptions(filename: string) {
       return filename;
     },
     searchResults: {

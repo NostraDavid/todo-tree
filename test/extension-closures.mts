@@ -1,10 +1,9 @@
-const fs = require('node:fs');
-const path = require('node:path');
-const vm = require('node:vm');
-const { root } = require('./tree-boundary');
-
+import fs from 'node:fs';
+import path from 'node:path';
+import vm from 'node:vm';
+import { root } from './tree-boundary.mts';
 // Execute actual closure bodies while stubbing only their editor boundary.
-function extensionClosures(names, bindings) {
+function extensionClosures(names: readonly string[], bindings: Record<string, unknown>) {
   const source = fs.readFileSync(path.join(root, 'out/src/extension.js'), 'utf8');
   const sandbox = vm.createContext({ ...bindings, console });
   const globals = (source.match(/^var \w+[^\n]*;$/gm) || []).filter(line => !line.includes('require('));
@@ -22,7 +21,7 @@ function extensionClosures(names, bindings) {
   return sandbox;
 }
 
-function registeredCommand(command, bindings) {
+function registeredCommand(command: string, bindings: Record<string, unknown>) {
   const source = fs.readFileSync(path.join(root, 'out/src/extension.js'), 'utf8');
   const match = source.match(
     new RegExp(
@@ -37,7 +36,7 @@ function registeredCommand(command, bindings) {
   return sandbox;
 }
 
-function restoreFilter(bindings) {
+function restoreFilter(bindings: Record<string, unknown>) {
   const source = fs.readFileSync(path.join(root, 'out/src/extension.js'), 'utf8');
   const match = source.match(
     / +currentFilter = context.workspaceState.get\('currentFilter'\);[\s\S]*?(?= +config.init\(context\);)/,
@@ -48,4 +47,4 @@ function restoreFilter(bindings) {
   return sandbox;
 }
 
-module.exports = { extensionClosures, registeredCommand, restoreFilter };
+export { extensionClosures, registeredCommand, restoreFilter };
