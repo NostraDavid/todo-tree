@@ -20,7 +20,7 @@ export function init(configuration: Configuration) {
   config = configuration;
 }
 
-export function isHexColour(colour: unknown) {
+export function isHexColour(colour: unknown): boolean {
   if (typeof colour !== 'string') {
     return false;
   }
@@ -30,7 +30,7 @@ export function isHexColour(colour: unknown) {
     && (hex.length === 3 || hex.length === 4 || hex.length === 6 || hex.length === 8) && !isNaN(parseInt(hex, 16));
 }
 
-export function isRgbColour(colour: unknown) {
+export function isRgbColour(colour: unknown): boolean {
   return typeof colour === 'string' && colour.match(rgbRegex) !== null;
 }
 
@@ -38,8 +38,8 @@ export function isNamedColour(colour: string) {
   return colourNames.indexOf(colour.toLowerCase()) > -1;
 }
 
-export function isThemeColour(colour: string) {
-  return themeColourNames.indexOf(colour) > -1;
+export function isThemeColour(colour: unknown): boolean {
+  return typeof colour === 'string' && themeColourNames.indexOf(colour) > -1;
 }
 
 export function hexToRgba(hex: string | undefined, opacity: number) {
@@ -417,7 +417,7 @@ export function complementaryColour(colour: string) {
   return l > 0.179 ? '#000000' : '#ffffff';
 }
 
-export function isValidColour(colour: unknown) {
+export function isValidColour(colour: unknown): boolean {
   if (typeof colour === 'string' && colour) {
     if (isNamedColour(colour) || isThemeColour(colour) || isHexColour(colour) || isRgbColour(colour)) {
       return true;

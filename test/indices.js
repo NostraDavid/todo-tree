@@ -5,9 +5,9 @@ var utils = require('../out/src/utils.js');
 
 QUnit.test('loading highlights leaves native RegExp behavior intact', function(assert) {
   var source = fs.readFileSync(path.join(__dirname, '../out/src/highlights.js'), 'utf8');
-  var script = 'const vm = require("node:vm"); const before = RegExp.prototype.exec;'
+  var script = 'const vm = require("node:vm"); const before = RegExp.prototype.exec;const loaded={exports:{}};'
     + 'vm.runInNewContext(' + JSON.stringify(source)
-    + ', {module:{exports:{}},require:(name)=>name==="regexp-match-indices"?require(name):{}});'
+    + ', {module:loaded,exports:loaded.exports,require:(name)=>name==="regexp-match-indices"?require(name):{}});'
     + 'console.log(before === RegExp.prototype.exec);';
   var result = childProcess.spawnSync(process.execPath, ['-e', script], {
     cwd: path.join(__dirname, '..'),

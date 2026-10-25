@@ -1,15 +1,19 @@
-var vscode = require('vscode');
-var path = require('path');
-var fs = require('fs');
-var octicons = require('@primer/octicons');
+import * as fs from 'fs';
+import * as path from 'path';
+import * as vscode from 'vscode';
+import octicons = require('@primer/octicons');
 
-var utils = require('./utils.js');
-var attributes = require('./attributes.js');
-var themeColourNames = require('./themeColourNames.js');
-var codiconNames = require('./codiconNames.js');
-var productIconNames = require('./productIconNames.js');
+import * as attributes from './attributes.js';
+import * as utils from './utils.js';
+import themeColourNames = require('./themeColourNames');
+import codiconNames = require('./codiconNames');
+import productIconNames = require('./productIconNames');
 
-function getIcon(context, tag, debug) {
+export function getIcon(
+  context: Pick<vscode.ExtensionContext, 'asAbsolutePath' | 'globalStorageUri'>,
+  tag: string,
+  debug?: (text: string) => void,
+) {
   var colour = attributes.getIconColour(tag);
 
   var darkIconPath = context.asAbsolutePath(path.join('resources/icons', 'dark', 'todo-green.svg'));
@@ -109,22 +113,22 @@ function getIcon(context, tag, debug) {
   return icon;
 }
 
-function validateIcons(workspace) {
-  function checkIcon(setting) {
-    var icon = workspace.getConfiguration('todo-tree.highlights').get(setting + '.icon');
+export function validateIcons(workspace: Pick<typeof vscode.workspace, 'getConfiguration'>) {
+  function checkIcon(setting: string) {
+    var icon = workspace.getConfiguration('todo-tree.highlights').get<string>(setting + '.icon');
     if (icon !== undefined) {
       if (utils.isCodicon(icon)) {
         var codicon = icon.substr(2, icon.length - 3);
         if (codiconNames.indexOf(codicon) === -1 && productIconNames.indexOf(codicon) === -1) {
           invalidIcons.push(setting + '.icon(' + icon + ')');
         }
-      } else if (!octicons[icon] && (icon !== 'todo-tree' || icon !== 'todo-tree-filled')) {
+      } else if (!octicons[icon] && (icon !== 'todo-tree' && icon !== 'todo-tree-filled')) {
         invalidIcons.push(setting + '.icon(' + icon + ')');
       }
     }
   }
 
-  var invalidIcons = [];
+  var invalidIcons: string[] = [];
   var result = '';
 
   checkIcon('defaultHighlight');
@@ -140,6 +144,3 @@ function validateIcons(workspace) {
 
   return result;
 }
-
-module.exports.getIcon = getIcon;
-module.exports.validateIcons = validateIcons;

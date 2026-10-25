@@ -58,6 +58,7 @@ QUnit.test('highlight subscription disposes styles and cancels pending updates',
   const module = { exports: {} };
   vm.runInNewContext(fs.readFileSync(path.join(root, 'out/src/highlights.js'), 'utf8'), {
     module,
+    exports: module.exports,
     require(name) {
       return name === 'vscode'
         ? f.vscode

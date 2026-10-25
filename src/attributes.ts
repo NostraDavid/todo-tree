@@ -32,6 +32,12 @@ export function getAttribute<K extends keyof Highlight>(
   attribute: K,
   defaultValue: Highlight[K],
   ignoreDefaultHighlight?: boolean,
+): Highlight[K];
+export function getAttribute<K extends keyof Highlight>(
+  tag: string,
+  attribute: K,
+  defaultValue: Highlight[K],
+  ignoreDefaultHighlight?: boolean,
 ): Highlight[K] {
   function getCustomHighlightSettings(customHighlight: Record<string, Highlight>, tag: string): Highlight | undefined {
     var result: Highlight | undefined;

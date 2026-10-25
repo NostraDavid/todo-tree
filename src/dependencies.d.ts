@@ -23,3 +23,8 @@ declare module 'comment-patterns' {
   }
   export = lookup;
 }
+
+declare module '@primer/octicons' {
+  const icons: Record<string, { toSVG(options: Record<string, string | number>): string }>;
+  export = icons;
+}

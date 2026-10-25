@@ -6,6 +6,14 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+## [1.0.15] - 2026-10-25
+
+### Changed
+
+- Type icon generation, color validation and editor decorations against the VS Code API.
+- Keep theme colors distinct from CSS strings, and normalize ruler lanes to numeric editor values.
+- Correct built-in Todo Tree icon validation; both documented icon names remain valid.
+
 ## [1.0.14] - 2026-10-25
 
 ### Changed

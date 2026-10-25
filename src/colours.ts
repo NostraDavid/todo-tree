@@ -1,15 +1,16 @@
-var vscode = require('vscode');
-var utils = require('./utils.js');
+type Workspace = Pick<typeof import('vscode').workspace, 'getConfiguration'>;
+import * as vscode from 'vscode';
+import * as utils from './utils.js';
 
-function validateColours(workspace) {
-  function check(setting) {
+export function validateColours(workspace: Workspace) {
+  function check(setting: string) {
     var definedColour = workspace.getConfiguration('todo-tree.highlights').get(setting);
     if (definedColour !== undefined && !utils.isValidColour(definedColour)) {
       invalidColours.push(setting + ' (' + definedColour + ')');
     }
   }
 
-  var invalidColours = [];
+  var invalidColours: string[] = [];
   var result = '';
 
   var attributeList = ['foreground', 'background', 'iconColour', 'rulerColour'];
@@ -31,13 +32,13 @@ function validateColours(workspace) {
   return result;
 }
 
-function validateIconColours(workspace) {
+export function validateIconColours(workspace: Workspace) {
   var hasInvalidCodiconColour = false;
   var hasInvalidOcticonColour = false;
 
-  function checkIconColour(setting) {
-    var icon = workspace.getConfiguration('todo-tree.highlights').get(setting + '.icon');
-    var iconColour = workspace.getConfiguration('todo-tree.highlights').get(setting + '.iconColour');
+  function checkIconColour(setting: string) {
+    var icon = workspace.getConfiguration('todo-tree.highlights').get<string>(setting + '.icon');
+    var iconColour = workspace.getConfiguration('todo-tree.highlights').get<string>(setting + '.iconColour');
     if (icon !== undefined && iconColour !== undefined) {
       if (utils.isCodicon(icon)) {
         if (utils.isHexColour(iconColour) || utils.isRgbColour(iconColour) || utils.isNamedColour(iconColour)) {
@@ -53,7 +54,7 @@ function validateIconColours(workspace) {
     }
   }
 
-  var invalidIconColours = [];
+  var invalidIconColours: string[] = [];
   var result = '';
 
   checkIconColour('defaultHighlight');
@@ -75,6 +76,3 @@ function validateIconColours(workspace) {
 
   return result;
 }
-
-module.exports.validateColours = validateColours;
-module.exports.validateIconColours = validateIconColours;

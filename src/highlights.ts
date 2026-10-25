@@ -1,13 +1,13 @@
-var vscode = require('vscode');
+import * as vscode from 'vscode';
 
-var config = require('./config.js');
-var utils = require('./utils.js');
-var attributes = require('./attributes.js');
-var icons = require('./icons.js');
+import * as attributes from './attributes.js';
+import * as config from './config.js';
+import * as icons from './icons.js';
+import * as utils from './utils.js';
 
 var captureGroupArgument = 'capture-groups';
 
-var lanes = {
+var lanes: Record<string, vscode.OverviewRulerLane | undefined> = {
   'none': undefined,
   'left': 1,
   'center': 2,
@@ -15,12 +15,12 @@ var lanes = {
   'full': 7,
 };
 
-var decorations = {};
-var highlightTimer = {};
-var context;
-var debug;
+var decorations: Record<string, vscode.TextEditorDecorationType[]> = {};
+var highlightTimer: Record<string, ReturnType<typeof setTimeout>> = {};
+var context: vscode.ExtensionContext;
+var debug: (text: string) => void;
 
-function init(context_, debug_) {
+export function init(context_: vscode.ExtensionContext, debug_: (text: string) => void) {
   context = context_;
   debug = debug_;
   context.subscriptions.push(
@@ -33,10 +33,10 @@ function init(context_, debug_) {
   );
 }
 
-function applyOpacity(colour, opacity) {
-  if (utils.isHexColour(colour)) {
+function applyOpacity(colour: string | vscode.ThemeColor | undefined, opacity: number) {
+  if (typeof colour === 'string' && utils.isHexColour(colour)) {
     colour = utils.hexToRgba(colour, opacity < 1 ? opacity * 100 : opacity);
-  } else if (utils.isRgbColour(colour)) {
+  } else if (typeof colour === 'string' && utils.isRgbColour(colour)) {
     if (opacity !== 100) {
       colour = utils.setRgbAlpha(colour, opacity > 1 ? opacity / 100 : opacity);
     }
@@ -45,16 +45,16 @@ function applyOpacity(colour, opacity) {
   return colour;
 }
 
-function getDecoration(tag) {
+export function getDecoration(tag: string) {
   var foregroundColour = attributes.getForeground(tag);
   var backgroundColour = attributes.getBackground(tag);
 
   var opacity = getOpacity(tag);
 
-  var lightForegroundColour = foregroundColour;
-  var darkForegroundColour = foregroundColour;
-  var lightBackgroundColour = backgroundColour;
-  var darkBackgroundColour = backgroundColour;
+  var lightForegroundColour: string | vscode.ThemeColor | undefined = foregroundColour;
+  var darkForegroundColour: string | vscode.ThemeColor | undefined = foregroundColour;
+  var lightBackgroundColour: string | vscode.ThemeColor | undefined = backgroundColour;
+  var darkBackgroundColour: string | vscode.ThemeColor | undefined = backgroundColour;
 
   if (foregroundColour) {
     if (foregroundColour.match(/(foreground|background)/i)) {
@@ -79,10 +79,16 @@ function getDecoration(tag) {
     darkBackgroundColour = applyOpacity(darkBackgroundColour, opacity);
   }
 
-  if (lightForegroundColour === undefined && utils.isHexColour(lightBackgroundColour)) {
+  if (
+    lightForegroundColour === undefined && typeof lightBackgroundColour === 'string'
+    && utils.isHexColour(lightBackgroundColour)
+  ) {
     lightForegroundColour = utils.complementaryColour(lightBackgroundColour);
   }
-  if (darkForegroundColour === undefined && utils.isHexColour(darkBackgroundColour)) {
+  if (
+    darkForegroundColour === undefined && typeof darkBackgroundColour === 'string'
+    && utils.isHexColour(darkBackgroundColour)
+  ) {
     darkForegroundColour = utils.complementaryColour(darkBackgroundColour);
   }
 
@@ -96,24 +102,31 @@ function getDecoration(tag) {
     darkForegroundColour = new vscode.ThemeColor('editor.background');
   }
 
-  var lane = getRulerLane(tag);
-  if (isNaN(parseInt(lane))) {
-    lane = lanes[lane.toLowerCase()];
-  }
-  var decorationOptions = {
+  var configuredLane = getRulerLane(tag);
+  var lane = typeof configuredLane === 'number'
+    ? configuredLane
+    : Number.isNaN(parseInt(configuredLane))
+    ? lanes[configuredLane.toLowerCase()]
+    : Number(configuredLane);
+  var gutterIcon = showInGutter(tag) ? icons.getIcon(context, tag, debug) : undefined;
+
+  var decorationOptions: vscode.DecorationRenderOptions = {
     borderRadius: getBorderRadius(tag),
     isWholeLine: getType(tag) === 'whole-line',
     fontWeight: getFontWeight(tag),
     fontStyle: getFontStyle(tag),
     textDecoration: getTextDecoration(tag),
-    gutterIconPath: showInGutter(tag) ? icons.getIcon(context, tag, debug).dark : undefined,
+    gutterIconPath: gutterIcon && 'dark' in gutterIcon ? gutterIcon.dark : undefined,
   };
 
   if (lane !== undefined) {
-    var rulerColour = getRulerColour(tag, darkBackgroundColour ? darkBackgroundColour : 'editor.foreground');
+    var rulerColour: string | vscode.ThemeColor | undefined = getRulerColour(
+      tag,
+      darkBackgroundColour ? darkBackgroundColour : 'editor.foreground',
+    );
     var rulerOpacity = getRulerOpacity(tag);
 
-    if (utils.isThemeColour(rulerColour)) {
+    if (typeof rulerColour === 'string' && utils.isThemeColour(rulerColour)) {
       rulerColour = new vscode.ThemeColor(rulerColour);
     } else {
       rulerColour = applyOpacity(rulerColour, rulerOpacity);
@@ -129,51 +142,51 @@ function getDecoration(tag) {
   return vscode.window.createTextEditorDecorationType(decorationOptions);
 }
 
-function getRulerColour(tag, defaultColour) {
-  return attributes.getAttribute(tag, 'rulerColour', defaultColour);
+function getRulerColour(tag: string, defaultColour: string | vscode.ThemeColor) {
+  return attributes.getAttribute(tag, 'rulerColour', undefined) ?? defaultColour;
 }
 
-function getRulerLane(tag) {
+function getRulerLane(tag: string) {
   return attributes.getAttribute(tag, 'rulerLane', 4);
 }
 
-function getOpacity(tag) {
+function getOpacity(tag: string) {
   return attributes.getAttribute(tag, 'opacity', 100);
 }
 
-function getRulerOpacity(tag) {
+function getRulerOpacity(tag: string) {
   return attributes.getAttribute(tag, 'rulerOpacity', 100);
 }
 
-function getBorderRadius(tag) {
+function getBorderRadius(tag: string) {
   return attributes.getAttribute(tag, 'borderRadius', '0.2em');
 }
 
-function getFontStyle(tag) {
+function getFontStyle(tag: string) {
   return attributes.getAttribute(tag, 'fontStyle', 'normal');
 }
 
-function getFontWeight(tag) {
+function getFontWeight(tag: string) {
   return attributes.getAttribute(tag, 'fontWeight', 'normal');
 }
 
-function getTextDecoration(tag) {
+function getTextDecoration(tag: string) {
   return attributes.getAttribute(tag, 'textDecoration', '');
 }
 
-function showInGutter(tag) {
+function showInGutter(tag: string) {
   return attributes.getAttribute(tag, 'gutterIcon', false);
 }
 
-function getType(tag) {
+function getType(tag: string) {
   return attributes.getAttribute(
     tag,
     'type',
-    vscode.workspace.getConfiguration('todo-tree.highlights').get('highlight'),
+    vscode.workspace.getConfiguration('todo-tree.highlights').get<string>('highlight'),
   );
 }
 
-function editorId(editor) {
+function editorId(editor: vscode.TextEditor) {
   var id = '';
   if (editor.document) {
     id = JSON.stringify(editor.document.uri);
@@ -184,8 +197,8 @@ function editorId(editor) {
   return id;
 }
 
-function highlight(editor) {
-  function addDecoration(startPos, endPos) {
+function highlight(editor: vscode.TextEditor | undefined) {
+  function addDecoration(startPos: vscode.Position, endPos: vscode.Position) {
     var decoration = { range: new vscode.Range(startPos, endPos) };
     if (documentHighlights[tag] === undefined) {
       documentHighlights[tag] = [];
@@ -193,8 +206,8 @@ function highlight(editor) {
     documentHighlights[tag].push(decoration);
   }
 
-  var documentHighlights = {};
-  var subTagHighlights = {};
+  var documentHighlights: Record<string, vscode.DecorationOptions[]> = {};
+  var subTagHighlights: Record<string, vscode.DecorationOptions[]> = {};
   var customHighlight = config.customHighlight();
 
   if (editor) {
@@ -213,7 +226,7 @@ function highlight(editor) {
       var regex = utils.getRegexForEditorSearch(true);
       var subTagRegex = new RegExp(config.subTagRegex());
 
-      var match;
+      var match: RegExpExecArray | null;
       while ((match = regex.exec(text)) !== null) {
         var tag = match[0];
         var offsetStart = match.index;
@@ -226,7 +239,7 @@ function highlight(editor) {
         if (extracted.tag && extracted.tag.length > 0) {
           var tagGroup = config.tagGroup(extracted.tag);
           tag = tagGroup ? tagGroup : extracted.tag;
-          offsetStart = match.index + extracted.tagOffset;
+          offsetStart = match.index + extracted.tagOffset!;
           offsetEnd = offsetStart + extracted.tag.length;
         } else {
           offsetStart += match[0].search(/\S|$/);
@@ -248,12 +261,13 @@ function highlight(editor) {
               new vscode.Position(fullEndPos.line, editor.document.lineAt(fullEndPos.line).range.end.character),
             );
           } else if (type !== undefined && type.indexOf(captureGroupArgument + ':') === 0) {
+            const matchIndices = match.indices;
             type.substring(type.indexOf(':') + 1).split(',').map(function(groupText) {
               var group = parseInt(groupText);
-              if (match.indices && match.indices[group]) {
+              if (matchIndices && matchIndices[group]) {
                 addDecoration(
-                  editor.document.positionAt(match.indices[group][0]),
-                  editor.document.positionAt(match.indices[group][1]),
+                  editor.document.positionAt(matchIndices[group][0]),
+                  editor.document.positionAt(matchIndices[group][1]),
                 );
               }
             });
@@ -308,7 +322,7 @@ function highlight(editor) {
   }
 }
 
-function triggerHighlight(editor) {
+export function triggerHighlight(editor: vscode.TextEditor | undefined) {
   if (editor) {
     var id = editorId(editor);
 
@@ -322,7 +336,3 @@ function triggerHighlight(editor) {
     );
   }
 }
-
-module.exports.init = init;
-module.exports.getDecoration = getDecoration;
-module.exports.triggerHighlight = triggerHighlight;
