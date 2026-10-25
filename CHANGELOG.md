@@ -6,6 +6,12 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 ## [Unreleased]
 
+## [1.0.9] - 2026-10-25
+
+### Fixed
+
+- Keep the tree-view context action inside Todo Tree when tags-only mode is active, instead of showing it in other extensions.
+
 ## [1.0.8] - 2026-10-25
 
 ### Fixed

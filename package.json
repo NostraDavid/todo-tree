@@ -1,7 +1,7 @@
 {
   "name": "nostradavid-todo-tree",
   "displayName": "Todo Tree by NostraDavid",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Find TODO and FIXME comments with ripgrep. A maintained Todo Tree fork by NostraDavid.",
   "categories": [
     "Other"
@@ -242,7 +242,7 @@
         },
         {
           "command": "todo-tree.showTreeView",
-          "when": "view =~ /todo-tree/ && todo-tree-flat == true || todo-tree-tags-only == true",
+          "when": "view =~ /todo-tree/ && (todo-tree-flat == true || todo-tree-tags-only == true)",
           "group": "4-tree@4"
         },
         {
