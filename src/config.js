@@ -2,6 +2,7 @@ var vscode = require( 'vscode' );
 var fs = require( 'fs' );
 var path = require( 'path' );
 var attributes = require( './attributes.js' );
+var utils = require( './utils.js' );
 
 var context;
 
@@ -94,7 +95,7 @@ function ripgrepPath()
 
     var rgPath = "";
 
-    rgPath = exePathIsDefined( vscode.workspace.getConfiguration( 'todo-tree.ripgrep' ).ripgrep );
+    rgPath = exePathIsDefined( utils.expandTilde( vscode.workspace.getConfiguration( 'todo-tree.ripgrep' ).ripgrep ) );
     if( rgPath ) return rgPath;
 
     rgPath = exePathIsDefined( path.join( vscode.env.appRoot, "node_modules/vscode-ripgrep/bin/", exeName() ) );

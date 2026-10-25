@@ -92,7 +92,7 @@
     "todo-tree.configuration.regex.regexCaseSensitive.markdownDescription": "Use a case sensitive regular expression.",
     "todo-tree.configuration.regex.subTagRegex.markdownDescription": "Regular expression for processing the text to the right of the tag, e.g. for extracting a sub tag, or removing unwanted characters.",
     "todo-tree.configuration.ripgrep": "Ripgrep",
-    "todo-tree.configuration.ripgrep.ripgrep.markdownDescription": "Location of your version of ripgrep.",
+    "todo-tree.configuration.ripgrep.ripgrep.markdownDescription": "Location of your version of ripgrep. A leading `~` is expanded to your home directory, for example `~/.local/bin/rg`.",
     "todo-tree.configuration.ripgrep.ripgrepArgs.markdownDescription": "Additional arguments to pass to ripgrep (Use with caution!).",
     "todo-tree.configuration.ripgrep.ripgrepMaxBuffer.markdownDescription": "Size of the buffer to use for retrieving output from ripgrep (kilobytes).",
     "todo-tree.configuration.ripgrep.usePatternFile.markdownDescription": "A pattern file is used with ripgrep by default. If you experience issues with deleting the pattern file, set this to false to use the legacy method of providing the regex to ripgrep.",

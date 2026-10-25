@@ -346,6 +346,7 @@ Set to false to allow tags to be matched regardless of case.
 
 **todo-tree.ripgrep.ripgrep** (`""`)</br>
 Normally, the extension will locate ripgrep itself as and when required. If you want to use an alternate version of ripgrep, set this to point to wherever it is installed.
+A leading `~` is expanded to your home directory, for example `~/.local/bin/rg`.
 
 **todo-tree.ripgrep.ripgrepArgs** (`"--max-columns=1000"`)</br>
 Use this to pass additional arguments to ripgrep. e.g. `"-i"` to make the search case insensitive. *Use with caution!*
