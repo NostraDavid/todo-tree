@@ -51,9 +51,16 @@ Wait for the **Check** workflow's Linux, macOS, and Windows results before publi
 
 The publisher is `nostradavid`. Its extension identifier is `nostradavid.nostradavid-todo-tree`.
 The workflow needs a repository secret named `VSCE_PAT` before it can publish there.
+This credential authenticates uploads to Microsoft's Marketplace. GitHub's builds and releases do not need Azure DevOps.
+
+The PAT setup requires an Azure DevOps organization.
+Microsoft now [requires an active Azure subscription to create a new organization](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/create-organization?view=azure-devops).
+Its free usage allowance does not remove that subscription and billing requirement.
+If you have no organization and do not want an Azure subscription, use the manual upload at the end of this guide with your existing Marketplace publisher.
+The GitHub build and release steps remain usable without a Marketplace credential.
 
 1. Follow Microsoft's [Personal Access Token setup](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#get-a-personal-access-token).
-   Use the Microsoft account that owns this publisher. Create an Azure DevOps organization first if Microsoft requires one.
+   Use the Microsoft account that owns this publisher and an existing Azure DevOps organization, or create one only after reviewing the subscription requirement above.
 2. Select **All accessible organizations** and only the **Marketplace: Manage** scope.
 3. Give the token a short lifetime, at most 30 days. Do not choose an expiry after **2026-12-01**.
 4. Open [the repository's Actions secrets](https://github.com/NostraDavid/todo-tree/settings/secrets/actions).

@@ -15,6 +15,7 @@ The original Todo Tree release history is preserved in [the upstream changelog](
 
 - Ignore root files by default and allow only the project files and directories, following the nixcfg and CTB convention.
 - Include the repository-local prek configuration so fresh clones can install their commit checks.
+- Clarify the Azure subscription requirement for new DevOps organizations and the manual Marketplace upload alternative.
 - Upgrade the VSIX tool to 4.0.0 and document the publishing credential setup and required migration before global PAT retirement.
 
 ## [1.0.0] - 2026-10-25
